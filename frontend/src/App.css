@@ -1,34 +1,187 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
-}
+/* App-specific styles */
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
-}
-
-.App-header {
-    background-color: #0f0f10;
+.app-container {
     min-height: 100vh;
+    background-color: #050505;
+}
+
+/* Hero section background */
+.hero-bg {
+    position: relative;
+    background-image: linear-gradient(180deg, rgba(5,5,5,0.9) 0%, rgba(5,5,5,0.98) 100%),
+                      url('https://images.unsplash.com/photo-1702726001096-096efcf640b8?crop=entropy&cs=srgb&fm=jpg&q=85');
+    background-size: cover;
+    background-position: center;
+}
+
+/* Bento grid layouts */
+.bento-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(12, 1fr);
+}
+
+.bento-item {
+    @apply bg-surface border border-white/10 rounded-sm relative overflow-hidden;
+    transition: all 0.3s ease;
+}
+
+.bento-item:hover {
+    @apply border-primary/50;
+    box-shadow: 0 0 20px rgba(0, 122, 255, 0.1);
+}
+
+/* Code editor styling */
+.code-editor {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    tab-size: 2;
+    background-color: #0A0A0A;
+    color: #E0E0E0;
+}
+
+.code-editor:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px rgba(0, 122, 255, 0.5);
+}
+
+/* Stealth mode styling */
+.stealth-container {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    width: 420px;
+    max-height: 70vh;
+    z-index: 50;
+    transition: all 0.3s ease;
+}
+
+.stealth-minimized {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+/* Recording indicator */
+.recording-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #FF453A;
+    border-radius: 50%;
+    animation: pulse-recording 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-recording {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+/* Live transcription area */
+.transcript-container {
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+/* Answer display */
+.answer-content {
+    font-family: 'Manrope', sans-serif;
+    line-height: 1.7;
+}
+
+.answer-content p {
+    margin-bottom: 1rem;
+}
+
+.answer-content code {
+    font-family: 'JetBrains Mono', monospace;
+    background-color: rgba(0, 122, 255, 0.1);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+}
+
+.answer-content pre {
+    background-color: #0A0A0A;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+/* Button hover effects */
+.btn-glow {
+    box-shadow: 0 0 10px rgba(0, 122, 255, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-glow:hover {
+    box-shadow: 0 0 20px rgba(0, 122, 255, 0.5);
+}
+
+.btn-glow:active {
+    transform: scale(0.95);
+}
+
+/* Card hover effects */
+.card-interactive {
+    transition: all 0.3s ease;
+}
+
+.card-interactive:hover {
+    border-color: rgba(0, 122, 255, 0.5);
+    box-shadow: 0 0 30px rgba(0, 122, 255, 0.1);
+}
+
+/* Loading states */
+.typing-indicator {
     display: flex;
-    flex-direction: column;
+    gap: 4px;
     align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+    padding: 0.5rem;
 }
 
-.App-link {
-    color: #61dafb;
+.typing-indicator span {
+    width: 6px;
+    height: 6px;
+    background-color: #007AFF;
+    border-radius: 50%;
+    animation: typing-bounce 1.4s ease-in-out infinite;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing-bounce {
+    0%, 100% {
+        transform: translateY(0);
+        opacity: 0.3;
     }
-    to {
-        transform: rotate(360deg);
+    50% {
+        transform: translateY(-4px);
+        opacity: 1;
     }
+}
+
+/* Draggable handle */
+.drag-handle {
+    cursor: grab;
+    user-select: none;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
 }
