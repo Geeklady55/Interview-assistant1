@@ -41,8 +41,12 @@ logger = logging.getLogger(__name__)
 
 class SessionCreate(BaseModel):
     name: str
-    interview_type: str  # phone, video, coding
+    interview_type: str  # phone, video, coding, mock
     domain: str  # frontend, backend, system_design, dsa, technical_support
+    job_description: Optional[str] = None
+    resume: Optional[str] = None
+    company_name: Optional[str] = None
+    role_title: Optional[str] = None
 
 class Session(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -50,9 +54,35 @@ class Session(BaseModel):
     name: str
     interview_type: str
     domain: str
+    job_description: Optional[str] = None
+    resume: Optional[str] = None
+    company_name: Optional[str] = None
+    role_title: Optional[str] = None
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     is_active: bool = True
+
+class SessionUpdate(BaseModel):
+    job_description: Optional[str] = None
+    resume: Optional[str] = None
+    company_name: Optional[str] = None
+    role_title: Optional[str] = None
+
+class MockQuestion(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    category: str  # behavioral, technical, coding, system_design
+    question: str
+    difficulty: str  # easy, medium, hard
+    domain: str
+    tips: Optional[str] = None
+
+class GenerateMockQuestionsRequest(BaseModel):
+    domain: str
+    job_description: Optional[str] = None
+    resume: Optional[str] = None
+    count: int = 5
+    ai_model: str = "gpt-5.2"
 
 class QAPair(BaseModel):
     model_config = ConfigDict(extra="ignore")
