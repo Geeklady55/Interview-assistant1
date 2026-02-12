@@ -1,0 +1,141 @@
+{
+  "brand_identity": {
+    "name": "StealthInterview.ai",
+    "archetype": "The Performance Pro",
+    "vibe": "Elite, Precision, Invisible, Intelligent",
+    "description": "A tactical interview command center that blends into your workflow. It feels like a native OS extension, not a web app."
+  },
+  "typography": {
+    "primary_font": "Manrope",
+    "secondary_font": "Chivo",
+    "mono_font": "JetBrains Mono",
+    "import_url": "https://fonts.googleapis.com/css2?family=Chivo:wght@300;400;700;900&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600;800&display=swap",
+    "usage": {
+      "headings": "font-secondary font-black tracking-tight uppercase",
+      "body": "font-primary tracking-normal",
+      "code": "font-mono text-sm tracking-tight",
+      "ui_labels": "font-primary font-bold tracking-wide uppercase text-xs"
+    }
+  },
+  "colors": {
+    "mode": "dark",
+    "palette": {
+      "background": "#050505",
+      "surface": "#0F0F0F",
+      "surface_highlight": "#1A1A1A",
+      "border": "#262626",
+      "primary": "#007AFF",
+      "primary_foreground": "#FFFFFF",
+      "secondary": "#32D74B",
+      "accent": "#FFD60A",
+      "muted": "#737373",
+      "destructive": "#FF453A"
+    },
+    "gradients": {
+      "stealth_overlay": "linear-gradient(180deg, rgba(5,5,5,0.8) 0%, rgba(5,5,5,0.95) 100%)",
+      "active_glow": "radial-gradient(circle at center, rgba(0,122,255,0.15) 0%, transparent 70%)"
+    },
+    "utility_classes": {
+      "bg_app": "bg-[#050505]",
+      "bg_surface": "bg-[#0F0F0F]",
+      "text_muted": "text-[#737373]",
+      "border_subtle": "border-[#262626]"
+    }
+  },
+  "visual_enhancers": {
+    "radius": "rounded-sm",
+    "borders": "border border-white/10",
+    "shadows": {
+      "default": "shadow-none",
+      "hover": "shadow-[0_0_20px_rgba(0,122,255,0.1)]",
+      "glass": "backdrop-blur-xl backdrop-saturate-150 bg-black/60 border-white/5"
+    },
+    "textures": {
+      "noise": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E\")"
+    }
+  },
+  "layout": {
+    "grid_system": "Bento Grid (Mode B)",
+    "spacing_scale": "Relaxed (p-6, p-8, gap-6)",
+    "container_width": "max-w-7xl mx-auto",
+    "z_index": {
+      "stealth_layer": "z-50",
+      "modal": "z-40",
+      "dropdown": "z-30",
+      "base": "z-0"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-white hover:bg-primary/90 rounded-sm font-bold tracking-wide shadow-[0_0_10px_rgba(0,122,255,0.3)] transition-all duration-200",
+      "secondary": "bg-surface border border-white/10 hover:border-white/20 text-white rounded-sm transition-all",
+      "ghost": "hover:bg-white/5 text-muted-foreground hover:text-white transition-colors"
+    },
+    "cards": {
+      "default": "bg-surface border border-white/10 rounded-sm p-6 relative overflow-hidden group",
+      "interactive": "hover:border-primary/50 transition-colors duration-300 cursor-pointer"
+    },
+    "inputs": {
+      "default": "bg-[#0A0A0A] border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-sm h-10 text-sm font-mono"
+    },
+    "stealth_mode": {
+      "container": "fixed bottom-4 right-4 w-[400px] bg-black/80 backdrop-blur-md border border-white/10 rounded-lg shadow-2xl transition-opacity duration-300",
+      "opacity_idle": "opacity-10 hover:opacity-100",
+      "text": "text-xs font-mono text-white/90"
+    }
+  },
+  "assets": {
+    "images": [
+      {
+        "category": "hero_background",
+        "url": "https://images.unsplash.com/photo-1702726001096-096efcf640b8?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Dark minimalist laptop setup, perfect for the landing page hero section."
+      },
+      {
+        "category": "ai_visualization",
+        "url": "https://images.unsplash.com/photo-1762279388956-1c098163a2a8?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Abstract neon data flow, use for the 'AI Processing' or 'Real-time Analysis' feature section."
+      },
+      {
+        "category": "stealth_context",
+        "url": "https://images.unsplash.com/photo-1608181204104-5b49c215fcba?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Clean monitor setup, use for 'Works on any platform' section."
+      }
+    ],
+    "icons": "Lucide React (default)",
+    "logo_placeholder": "Use a simple geometric shape (e.g., a hexagon or shield) in CSS or SVG."
+  },
+  "motion": {
+    "library": "framer-motion",
+    "animations": {
+      "fade_in": {
+        "initial": { "opacity": 0, "y": 10 },
+        "animate": { "opacity": 1, "y": 0 },
+        "transition": { "duration": 0.4, "ease": "easeOut" }
+      },
+      "stealth_toggle": {
+        "initial": { "opacity": 0, "scale": 0.95 },
+        "animate": { "opacity": 1, "scale": 1 },
+        "exit": { "opacity": 0, "scale": 0.95 }
+      }
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. INSTALLATION: Run `yarn add framer-motion clsx tailwind-merge` if not present.",
+    "2. FONTS: Add the Google Fonts import link to `src/index.css` at the very top.",
+    "3. TAILWIND: Update `tailwind.config.js` to include the custom colors (surface, surface_highlight) and fonts (Chivo, Manrope, JetBrains Mono).",
+    "4. STEALTH MODE: Implement the 'Stealth Mode' as a draggable, semi-transparent overlay component. Use the `opacity_idle` class logic.",
+    "5. CODE EDITOR: Use a simple `textarea` or `div` styled with `font-mono` and `bg-[#0A0A0A]` to simulate a code editor if a full library isn't used. Ensure syntax highlighting colors match the 'Neon' palette.",
+    "6. LANDING PAGE: Use the 'hero_background' image with a heavy dark overlay (bg-black/80) so text pops. Use 'Chivo' for the main headline: 'DOMINATE THE INTERVIEW'.",
+    "7. DASHBOARD: Use the Bento Grid layout. The 'Live Interview' button should be the dominant element (col-span-2 row-span-2).",
+    "8. CRITICAL: Do NOT use gradients for backgrounds. Use solid dark colors + noise texture.",
+    "9. DATA-TESTID: Add `data-testid` to all interactive elements (e.g., `start-interview-btn`, `stealth-toggle`)."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Avoid 'AI Slop': No generic centered layouts. Use asymmetry.",
+    "Dark Mode Only: The app is designed for high-focus, low-light environments. Do not build a light mode unless explicitly requested by a toggle (default to dark).",
+    "Micro-Interactions: Buttons should scale down slightly on click (`active:scale-95`).",
+    "Glassmorphism: Use the `glass` utility defined in visual_enhancers for the Stealth Overlay.",
+    "No Emojis: Use Lucide icons instead of emojis."
+  ]
+}
