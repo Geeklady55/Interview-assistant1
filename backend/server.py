@@ -426,6 +426,80 @@ async def update_settings(settings: SettingsModel):
     )
     return settings
 
+# Mock Interview Questions
+@api_router.post("/generate-mock-questions")
+async def generate_mock_questions(request: GenerateMockQuestionsRequest):
+    try:
+        system_prompt = """You are an expert technical interviewer. Generate realistic interview questions based on the provided context.
+        
+Return questions in JSON format as an array of objects with these fields:
+- category: one of "behavioral", "technical", "coding", "system_design"
+- question: the interview question
+- difficulty: one of "easy", "medium", "hard"
+- tips: brief tips for answering this question
+
+Generate diverse questions covering different aspects of the role."""
+
+        context_parts = [f"Domain: {request.domain}"]
+        if request.job_description:
+            context_parts.append(f"Job Description:\n{request.job_description[:1500]}")
+        if request.resume:
+            context_parts.append(f"Candidate Background:\n{request.resume[:1500]}")
+        
+        question = f"""Generate {request.count} interview questions for a {request.domain} position.
+
+{chr(10).join(context_parts)}
+
+Return ONLY a valid JSON array with the questions. No other text."""
+
+        session_id = str(uuid.uuid4())
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=session_id,
+            system_message=system_prompt
+        )
+        
+        if request.ai_model == "gpt-5.2":
+            chat.with_model("openai", "gpt-5.2")
+        elif request.ai_model == "claude-sonnet-4.5":
+            chat.with_model("anthropic", "claude-sonnet-4-5-20250929")
+        else:
+            chat.with_model("gemini", "gemini-3-flash-preview")
+        
+        user_message = UserMessage(text=question)
+        response = await chat.send_message(user_message)
+        
+        # Parse JSON from response
+        import json
+        # Try to extract JSON from the response
+        response_text = response.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        
+        questions = json.loads(response_text.strip())
+        
+        return {"questions": questions, "ai_model": request.ai_model}
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse mock questions JSON: {str(e)}")
+        # Return default questions if parsing fails
+        return {
+            "questions": [
+                {"category": "behavioral", "question": "Tell me about yourself and your experience.", "difficulty": "easy", "tips": "Keep it concise, focus on relevant experience."},
+                {"category": "technical", "question": f"What are the key concepts in {request.domain}?", "difficulty": "medium", "tips": "Cover fundamentals and recent developments."},
+                {"category": "behavioral", "question": "Describe a challenging project you worked on.", "difficulty": "medium", "tips": "Use STAR method: Situation, Task, Action, Result."},
+                {"category": "technical", "question": "How do you approach debugging complex issues?", "difficulty": "medium", "tips": "Show systematic thinking and tool knowledge."},
+                {"category": "behavioral", "question": "Where do you see yourself in 5 years?", "difficulty": "easy", "tips": "Align with the company's growth and your career goals."}
+            ],
+            "ai_model": request.ai_model
+        }
+    except Exception as e:
+        logger.error(f"Error generating mock questions: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate questions: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
