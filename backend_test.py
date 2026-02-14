@@ -477,6 +477,9 @@ def main():
         tester.test_generate_answer_with_context,
         tester.test_code_assist,
         tester.test_get_qa_pairs,
+        tester.test_transcribe_audio,  # New Whisper endpoint
+        tester.test_export_session_json,  # New export endpoint
+        tester.test_export_session_markdown,  # New export endpoint
         tester.test_get_settings,
         tester.test_update_settings,
         tester.test_delete_qa_pair,
