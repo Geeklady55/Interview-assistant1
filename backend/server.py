@@ -771,12 +771,6 @@ async def stripe_webhook(request: Request):
         logger.error(f"Webhook error: {str(e)}")
         return {"status": "error", "message": str(e)}
 
-@api_router.get("/subscriptions/check-limits")
-async def check_limits(email: str = None, usage_type: str = "live_interview"):
-    """Check if user can use a specific feature based on their subscription"""
-    result = await check_subscription_limits(email, usage_type)
-    return result
-
 # Session Management
 @api_router.post("/sessions", response_model=Session)
 async def create_session(input: SessionCreate):
