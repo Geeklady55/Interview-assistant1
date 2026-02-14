@@ -11,7 +11,10 @@ import {
   ChevronRight,
   Monitor,
   Headphones,
-  Video
+  Video,
+  Download,
+  Apple,
+  MonitorDown,
 } from "lucide-react";
 
 const LandingPage = () => {
