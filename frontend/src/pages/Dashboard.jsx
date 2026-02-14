@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -33,6 +35,9 @@ import {
   Headphones,
   Video,
   Trash2,
+  Brain,
+  FileText,
+  Briefcase,
 } from "lucide-react";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -46,6 +51,10 @@ const Dashboard = () => {
     name: "",
     interview_type: "video",
     domain: "general",
+    job_description: "",
+    resume: "",
+    company_name: "",
+    role_title: "",
   });
 
   useEffect(() => {
@@ -73,11 +82,21 @@ const Dashboard = () => {
       const response = await axios.post(`${API}/sessions`, newSession);
       toast.success("Session created successfully!");
       setCreateDialogOpen(false);
-      setNewSession({ name: "", interview_type: "video", domain: "general" });
+      setNewSession({ 
+        name: "", 
+        interview_type: "video", 
+        domain: "general",
+        job_description: "",
+        resume: "",
+        company_name: "",
+        role_title: "",
+      });
       
       // Navigate to appropriate interview mode
       if (newSession.interview_type === "coding") {
         navigate(`/code-interview/${response.data.id}`);
+      } else if (newSession.interview_type === "mock") {
+        navigate(`/mock-interview/${response.data.id}`);
       } else {
         navigate(`/live-interview/${response.data.id}`);
       }
@@ -103,6 +122,7 @@ const Dashboard = () => {
       case "phone": return Headphones;
       case "video": return Video;
       case "coding": return Code;
+      case "mock": return Brain;
       default: return Mic;
     }
   };
@@ -193,73 +213,144 @@ const Dashboard = () => {
                     </CardContent>
                   </Card>
                 </DialogTrigger>
-                <DialogContent className="bg-surface border-white/10 text-white">
+                <DialogContent className="bg-surface border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="font-secondary font-bold tracking-tight uppercase">
                       CREATE SESSION
                     </DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-6 pt-4">
-                    <div className="space-y-2">
-                      <Label className="text-white/70 font-primary text-sm uppercase tracking-wide">
-                        Session Name
-                      </Label>
-                      <Input
-                        data-testid="session-name-input"
-                        placeholder="e.g., Google SWE Interview"
-                        value={newSession.name}
-                        onChange={(e) => setNewSession({ ...newSession, name: e.target.value })}
-                        className="bg-[#0A0A0A] border-white/10 focus:border-primary/50 font-mono"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-white/70 font-primary text-sm uppercase tracking-wide">
-                        Interview Type
-                      </Label>
-                      <Select
-                        value={newSession.interview_type}
-                        onValueChange={(value) => setNewSession({ ...newSession, interview_type: value })}
-                      >
-                        <SelectTrigger data-testid="interview-type-select" className="bg-[#0A0A0A] border-white/10">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-surface border-white/10">
-                          <SelectItem value="phone">Phone Interview</SelectItem>
-                          <SelectItem value="video">Video Interview</SelectItem>
-                          <SelectItem value="coding">Coding Interview</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-white/70 font-primary text-sm uppercase tracking-wide">
-                        Domain
-                      </Label>
-                      <Select
-                        value={newSession.domain}
-                        onValueChange={(value) => setNewSession({ ...newSession, domain: value })}
-                      >
-                        <SelectTrigger data-testid="domain-select" className="bg-[#0A0A0A] border-white/10">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-surface border-white/10">
-                          <SelectItem value="general">General Technical</SelectItem>
-                          <SelectItem value="frontend">Frontend Development</SelectItem>
-                          <SelectItem value="backend">Backend Development</SelectItem>
-                          <SelectItem value="system_design">System Design</SelectItem>
-                          <SelectItem value="dsa">Data Structures & Algorithms</SelectItem>
-                          <SelectItem value="technical_support">Technical Support</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button
-                      data-testid="create-session-btn"
-                      onClick={createSession}
-                      className="w-full bg-primary hover:bg-primary/90 font-bold tracking-wide btn-glow"
-                    >
-                      CREATE & START
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
+                  <Tabs defaultValue="basic" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 bg-black/40">
+                      <TabsTrigger value="basic" className="data-[state=active]:bg-primary/20">
+                        Basic Info
+                      </TabsTrigger>
+                      <TabsTrigger value="context" className="data-[state=active]:bg-primary/20">
+                        Job & Resume
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="basic" className="space-y-4 pt-4">
+                      <div className="space-y-2">
+                        <Label className="text-white/70 font-primary text-sm uppercase tracking-wide">
+                          Session Name
+                        </Label>
+                        <Input
+                          data-testid="session-name-input"
+                          placeholder="e.g., Google SWE Interview"
+                          value={newSession.name}
+                          onChange={(e) => setNewSession({ ...newSession, name: e.target.value })}
+                          className="bg-[#0A0A0A] border-white/10 focus:border-primary/50 font-mono"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-white/70 font-primary text-sm uppercase tracking-wide">
+                            Company Name
+                          </Label>
+                          <Input
+                            data-testid="company-name-input"
+                            placeholder="e.g., Google"
+                            value={newSession.company_name}
+                            onChange={(e) => setNewSession({ ...newSession, company_name: e.target.value })}
+                            className="bg-[#0A0A0A] border-white/10 focus:border-primary/50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-white/70 font-primary text-sm uppercase tracking-wide">
+                            Role Title
+                          </Label>
+                          <Input
+                            data-testid="role-title-input"
+                            placeholder="e.g., Senior Software Engineer"
+                            value={newSession.role_title}
+                            onChange={(e) => setNewSession({ ...newSession, role_title: e.target.value })}
+                            className="bg-[#0A0A0A] border-white/10 focus:border-primary/50"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white/70 font-primary text-sm uppercase tracking-wide">
+                          Interview Type
+                        </Label>
+                        <Select
+                          value={newSession.interview_type}
+                          onValueChange={(value) => setNewSession({ ...newSession, interview_type: value })}
+                        >
+                          <SelectTrigger data-testid="interview-type-select" className="bg-[#0A0A0A] border-white/10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-surface border-white/10">
+                            <SelectItem value="phone">Phone Interview</SelectItem>
+                            <SelectItem value="video">Video Interview</SelectItem>
+                            <SelectItem value="coding">Coding Interview</SelectItem>
+                            <SelectItem value="mock">Mock Interview (Practice)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white/70 font-primary text-sm uppercase tracking-wide">
+                          Domain
+                        </Label>
+                        <Select
+                          value={newSession.domain}
+                          onValueChange={(value) => setNewSession({ ...newSession, domain: value })}
+                        >
+                          <SelectTrigger data-testid="domain-select" className="bg-[#0A0A0A] border-white/10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-surface border-white/10">
+                            <SelectItem value="general">General Technical</SelectItem>
+                            <SelectItem value="frontend">Frontend Development</SelectItem>
+                            <SelectItem value="backend">Backend Development</SelectItem>
+                            <SelectItem value="system_design">System Design</SelectItem>
+                            <SelectItem value="dsa">Data Structures & Algorithms</SelectItem>
+                            <SelectItem value="technical_support">Technical Support</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TabsContent>
+                    <TabsContent value="context" className="space-y-4 pt-4">
+                      <div className="p-4 bg-secondary/10 border border-secondary/20 rounded-sm mb-4">
+                        <p className="text-xs text-secondary font-primary">
+                          <Briefcase className="w-4 h-4 inline-block mr-2" />
+                          Adding your job description and resume helps the AI provide personalized, contextual answers that highlight your relevant experience.
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white/70 font-primary text-sm uppercase tracking-wide flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          Job Description
+                        </Label>
+                        <Textarea
+                          data-testid="job-description-input"
+                          placeholder="Paste the job description here..."
+                          value={newSession.job_description}
+                          onChange={(e) => setNewSession({ ...newSession, job_description: e.target.value })}
+                          className="min-h-[150px] bg-[#0A0A0A] border-white/10 focus:border-primary/50 font-primary text-sm"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white/70 font-primary text-sm uppercase tracking-wide flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          Your Resume / Background
+                        </Label>
+                        <Textarea
+                          data-testid="resume-input"
+                          placeholder="Paste your resume or key experiences here..."
+                          value={newSession.resume}
+                          onChange={(e) => setNewSession({ ...newSession, resume: e.target.value })}
+                          className="min-h-[150px] bg-[#0A0A0A] border-white/10 focus:border-primary/50 font-primary text-sm"
+                        />
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                  <Button
+                    data-testid="create-session-btn"
+                    onClick={createSession}
+                    className="w-full mt-4 bg-primary hover:bg-primary/90 font-bold tracking-wide btn-glow"
+                  >
+                    CREATE & START
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
                 </DialogContent>
               </Dialog>
             </motion.div>
@@ -308,6 +399,33 @@ const Dashboard = () => {
                   </h3>
                   <p className="text-white/40 text-xs font-primary">
                     Coding assistance
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+            >
+              <Card 
+                data-testid="quick-mock-interview-card"
+                className="bg-surface border-white/10 hover:border-purple-500/50 cursor-pointer transition-all card-interactive h-full"
+                onClick={() => {
+                  setNewSession({ ...newSession, interview_type: "mock" });
+                  setCreateDialogOpen(true);
+                }}
+              >
+                <CardContent className="p-6 flex flex-col h-full">
+                  <div className="w-10 h-10 rounded-sm bg-purple-500/20 flex items-center justify-center mb-4">
+                    <Brain className="w-5 h-5 text-purple-500" />
+                  </div>
+                  <h3 className="font-secondary font-bold text-sm tracking-tight uppercase mb-1">
+                    MOCK PREP
+                  </h3>
+                  <p className="text-white/40 text-xs font-primary">
+                    Practice interviews
                   </p>
                 </CardContent>
               </Card>
@@ -416,6 +534,8 @@ const Dashboard = () => {
                         onClick={() => {
                           if (session.interview_type === "coding") {
                             navigate(`/code-interview/${session.id}`);
+                          } else if (session.interview_type === "mock") {
+                            navigate(`/mock-interview/${session.id}`);
                           } else {
                             navigate(`/live-interview/${session.id}`);
                           }
@@ -438,6 +558,11 @@ const Dashboard = () => {
                           <h3 className="font-primary font-semibold text-sm mb-1 truncate">
                             {session.name}
                           </h3>
+                          {session.company_name && (
+                            <p className="text-xs text-primary/70 mb-1 truncate">
+                              {session.company_name} {session.role_title && `• ${session.role_title}`}
+                            </p>
+                          )}
                           <div className="flex items-center gap-2 text-xs text-white/40 font-primary">
                             <Clock className="w-3 h-3" />
                             <span>{formatDate(session.created_at)}</span>
@@ -449,6 +574,16 @@ const Dashboard = () => {
                             <span className="px-2 py-0.5 bg-white/5 rounded text-xs font-mono text-white/50 capitalize">
                               {session.domain.replace("_", " ")}
                             </span>
+                            {session.job_description && (
+                              <span className="px-2 py-0.5 bg-secondary/20 rounded text-xs font-mono text-secondary">
+                                JD
+                              </span>
+                            )}
+                            {session.resume && (
+                              <span className="px-2 py-0.5 bg-accent/20 rounded text-xs font-mono text-accent">
+                                CV
+                              </span>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
