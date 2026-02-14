@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, Menu, Tray, globalShortcut, ipcMain, nativeImage } = require('electron');
+const { app, BrowserWindow, shell, Menu, Tray, globalShortcut, ipcMain, nativeImage, dialog } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 
@@ -6,6 +6,9 @@ const { autoUpdater } = require('electron-updater');
 const CONFIG = {
   // Change this to your deployed URL or localhost for development
   APP_URL: process.env.STEALTH_APP_URL || 'https://tech-interview-pro-1.preview.emergentagent.com',
+  
+  // Update server URL (for custom update server)
+  UPDATE_SERVER_URL: process.env.STEALTH_UPDATE_URL || 'https://tech-interview-pro-1.preview.emergentagent.com/api',
   
   // Window settings
   WINDOW: {
@@ -27,6 +30,19 @@ let mainWindow = null;
 let stealthWindow = null;
 let tray = null;
 let isQuitting = false;
+let updateAvailable = false;
+
+// Configure auto-updater
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
+
+// For custom update server (optional)
+if (process.env.STEALTH_UPDATE_URL) {
+  autoUpdater.setFeedURL({
+    provider: 'generic',
+    url: `${CONFIG.UPDATE_SERVER_URL}/updates/${process.platform}`
+  });
+}
 
 // Single instance lock
 const gotTheLock = app.requestSingleInstanceLock();
