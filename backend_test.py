@@ -457,6 +457,193 @@ class StealthInterviewAPITester:
             print(f"   Session name: {response.get('session_name', 'N/A')}")
         return success
 
+    def test_desktop_download_windows(self):
+        """Test Windows desktop app download"""
+        url = f"{self.base_url}/desktop/download?platform=windows"
+        print(f"\n🔍 Testing Desktop Download (Windows)...")
+        print(f"   URL: {url}")
+        
+        try:
+            response = requests.get(url, timeout=30)
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                
+                # Check content type
+                content_type = response.headers.get('content-type', '')
+                print(f"   Content-Type: {content_type}")
+                
+                # Check content disposition
+                content_disposition = response.headers.get('content-disposition', '')
+                print(f"   Content-Disposition: {content_disposition}")
+                
+                # Check file size
+                content_length = len(response.content)
+                print(f"   File Size: {content_length} bytes")
+                
+                # Verify it's a zip file by checking magic bytes
+                if response.content[:2] == b'PK':
+                    print("   ✅ Valid ZIP file format")
+                else:
+                    print("   ❌ Invalid ZIP file format")
+                    success = False
+                    
+                # Check filename in content disposition
+                if 'StealthInterview-Desktop-Windows.zip' in content_disposition:
+                    print("   ✅ Correct filename in response")
+                else:
+                    print("   ❌ Incorrect or missing filename")
+                    
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                try:
+                    error_detail = response.json()
+                    print(f"   Error: {error_detail}")
+                except:
+                    print(f"   Response: {response.text[:200]}")
+                    
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            success = False
+            
+        self.tests_run += 1
+        return success
+
+    def test_desktop_download_mac(self):
+        """Test Mac desktop app download"""
+        url = f"{self.base_url}/desktop/download?platform=mac"
+        print(f"\n🔍 Testing Desktop Download (Mac)...")
+        print(f"   URL: {url}")
+        
+        try:
+            response = requests.get(url, timeout=30)
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                
+                # Check content type
+                content_type = response.headers.get('content-type', '')
+                print(f"   Content-Type: {content_type}")
+                
+                # Check content disposition
+                content_disposition = response.headers.get('content-disposition', '')
+                print(f"   Content-Disposition: {content_disposition}")
+                
+                # Check file size
+                content_length = len(response.content)
+                print(f"   File Size: {content_length} bytes")
+                
+                # Verify it's a zip file by checking magic bytes
+                if response.content[:2] == b'PK':
+                    print("   ✅ Valid ZIP file format")
+                else:
+                    print("   ❌ Invalid ZIP file format")
+                    success = False
+                    
+                # Check filename in content disposition
+                if 'StealthInterview-Desktop-Mac.zip' in content_disposition:
+                    print("   ✅ Correct filename in response")
+                else:
+                    print("   ❌ Incorrect or missing filename")
+                    
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                try:
+                    error_detail = response.json()
+                    print(f"   Error: {error_detail}")
+                except:
+                    print(f"   Response: {response.text[:200]}")
+                    
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            success = False
+            
+        self.tests_run += 1
+        return success
+
+    def test_desktop_download_zip_contents(self):
+        """Test desktop download zip contents"""
+        import zipfile
+        import io
+        
+        url = f"{self.base_url}/desktop/download?platform=windows"
+        print(f"\n🔍 Testing Desktop Download ZIP Contents...")
+        
+        try:
+            response = requests.get(url, timeout=30)
+            success = response.status_code == 200
+            
+            if success:
+                # Create a BytesIO object from the response content
+                zip_buffer = io.BytesIO(response.content)
+                
+                # Expected files in the zip
+                expected_files = [
+                    'StealthInterview-Desktop/main.js',
+                    'StealthInterview-Desktop/preload.js', 
+                    'StealthInterview-Desktop/package.json',
+                    'StealthInterview-Desktop/README.md',
+                    'StealthInterview-Desktop/build.sh',
+                    'StealthInterview-Desktop/build-windows.bat'  # Windows specific
+                ]
+                
+                with zipfile.ZipFile(zip_buffer, 'r') as zip_file:
+                    zip_contents = zip_file.namelist()
+                    print(f"   ZIP contains {len(zip_contents)} files")
+                    
+                    # Check for expected files
+                    missing_files = []
+                    for expected_file in expected_files:
+                        if expected_file in zip_contents:
+                            print(f"   ✅ Found: {expected_file}")
+                        else:
+                            print(f"   ❌ Missing: {expected_file}")
+                            missing_files.append(expected_file)
+                    
+                    if missing_files:
+                        print(f"   ❌ Missing {len(missing_files)} expected files")
+                        success = False
+                    else:
+                        print(f"   ✅ All expected files present")
+                        
+                    # Check package.json content
+                    if 'StealthInterview-Desktop/package.json' in zip_contents:
+                        package_content = zip_file.read('StealthInterview-Desktop/package.json')
+                        try:
+                            import json
+                            package_data = json.loads(package_content)
+                            print(f"   Package name: {package_data.get('name', 'N/A')}")
+                            print(f"   Package version: {package_data.get('version', 'N/A')}")
+                            
+                            # Check for required scripts
+                            scripts = package_data.get('scripts', {})
+                            if 'build:win' in scripts and 'build:mac' in scripts:
+                                print("   ✅ Build scripts present")
+                            else:
+                                print("   ❌ Missing build scripts")
+                                success = False
+                        except json.JSONDecodeError:
+                            print("   ❌ Invalid package.json format")
+                            success = False
+                
+                self.tests_passed += 1 if success else 0
+                print(f"✅ Passed - ZIP contents validated" if success else "❌ Failed - ZIP contents invalid")
+                
+            else:
+                print(f"❌ Failed - Could not download ZIP file")
+                success = False
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            success = False
+            
+        self.tests_run += 1
+        return success
+
 def main():
     print("🚀 Starting StealthInterview.ai API Tests")
     print("=" * 50)
