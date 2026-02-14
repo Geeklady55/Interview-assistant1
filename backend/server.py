@@ -139,7 +139,7 @@ class SettingsModel(BaseModel):
 # HELPER FUNCTIONS
 # =============================================================================
 
-def get_system_prompt(domain: str, tone: str) -> str:
+def get_system_prompt(domain: str, tone: str, job_description: str = None, resume: str = None, company_name: str = None, role_title: str = None) -> str:
     domain_prompts = {
         "frontend": "You are an expert frontend developer with deep knowledge of React, Vue, Angular, CSS, HTML, JavaScript/TypeScript, and modern web development practices.",
         "backend": "You are an expert backend developer with deep knowledge of system architecture, databases, APIs, microservices, and server-side programming in various languages.",
@@ -155,11 +155,25 @@ def get_system_prompt(domain: str, tone: str) -> str:
         "technical": "Respond with deep technical detail. Include specific terminology, best practices, and advanced concepts. Be precise and comprehensive."
     }
     
+    # Build context from job description and resume
+    context_section = ""
+    if job_description or resume or company_name or role_title:
+        context_section = "\n\nIMPORTANT CONTEXT FOR THIS INTERVIEW:\n"
+        if company_name:
+            context_section += f"- Company: {company_name}\n"
+        if role_title:
+            context_section += f"- Role: {role_title}\n"
+        if job_description:
+            context_section += f"- Job Description:\n{job_description[:2000]}\n"
+        if resume:
+            context_section += f"- Candidate's Background:\n{resume[:2000]}\n"
+        context_section += "\nUse this context to tailor your answers to highlight relevant experience and match the job requirements. Reference specific skills and experiences from the resume when appropriate."
+    
     base_prompt = f"""You are helping a job candidate during a technical interview. Your goal is to provide excellent answers that sound natural and human - NOT like they're being read from the internet or AI-generated.
 
 {domain_prompts.get(domain, domain_prompts['general'])}
 
-{tone_instructions.get(tone, tone_instructions['professional'])}
+{tone_instructions.get(tone, tone_instructions['professional'])}{context_section}
 
 CRITICAL RULES:
 1. Give answers that sound like a real person speaking naturally
@@ -170,6 +184,8 @@ CRITICAL RULES:
 6. For coding questions, explain your thought process as you would in an interview
 7. Never say "As an AI" or reference being an AI assistant
 8. Avoid overly formal or robotic language
+9. If resume context is provided, reference specific experiences and projects when relevant
+10. If job description is provided, align answers to highlight relevant skills
 """
     return base_prompt
 
