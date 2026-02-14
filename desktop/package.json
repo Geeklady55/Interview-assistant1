@@ -3,27 +3,43 @@
   "version": "1.2.0",
   "description": "StealthInterview.ai - Your invisible AI co-pilot for technical interviews",
   "main": "main.js",
-  "author": "StealthInterview.ai",
+  "author": {
+    "name": "StealthInterview.ai",
+    "email": "support@stealthinterview.ai"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stealthinterview/desktop"
+  },
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
-    "build:all": "electron-builder --win --mac --linux"
+    "build:all": "electron-builder --win --mac --linux",
+    "release": "electron-builder --publish always"
   },
   "build": {
     "appId": "com.stealthinterview.app",
     "productName": "StealthInterview",
+    "copyright": "Copyright © 2026 StealthInterview.ai",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "assets"
     },
     "files": [
       "main.js",
       "preload.js",
       "assets/**/*"
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "stealthinterview",
+      "repo": "desktop",
+      "releaseType": "release"
+    },
     "win": {
       "target": [
         {
@@ -36,7 +52,10 @@
         }
       ],
       "icon": "assets/icon.ico",
-      "artifactName": "StealthInterview-${version}-Windows.${ext}"
+      "artifactName": "StealthInterview-${version}-Windows-Setup.${ext}",
+      "publisherName": "StealthInterview.ai",
+      "verifyUpdateCodeSignature": false,
+      "signAndEditExecutable": true
     },
     "mac": {
       "target": [
@@ -51,20 +70,31 @@
       ],
       "icon": "assets/icon.icns",
       "artifactName": "StealthInterview-${version}-Mac-${arch}.${ext}",
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist",
+      "notarize": {
+        "teamId": "${env.APPLE_TEAM_ID}"
+      }
     },
     "linux": {
       "target": ["AppImage", "deb"],
       "icon": "assets/icon.png",
       "artifactName": "StealthInterview-${version}-Linux.${ext}",
-      "category": "Office"
+      "category": "Office",
+      "maintainer": "support@stealthinterview.ai"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico",
-      "installerHeaderIcon": "assets/icon.ico"
+      "installerHeaderIcon": "assets/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "StealthInterview"
     },
     "dmg": {
       "contents": [
@@ -78,7 +108,11 @@
           "type": "link",
           "path": "/Applications"
         }
-      ]
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      }
     }
   },
   "dependencies": {
@@ -86,6 +120,7 @@
   },
   "devDependencies": {
     "electron": "^28.1.0",
-    "electron-builder": "^24.9.1"
+    "electron-builder": "^24.9.1",
+    "electron-notarize": "^1.2.2"
   }
 }
