@@ -421,6 +421,268 @@ async def root():
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
+# =============================================================================
+# SUBSCRIPTION & PAYMENT ENDPOINTS
+# =============================================================================
+
+@api_router.get("/plans")
+async def get_subscription_plans():
+    """Get all subscription plans with pricing"""
+    plans = []
+    for plan_id, plan_data in SUBSCRIPTION_PLANS.items():
+        plans.append({
+            "id": plan_id,
+            **plan_data
+        })
+    return {"plans": plans}
+
+@api_router.get("/plans/{plan_id}")
+async def get_plan_details(plan_id: str):
+    """Get details for a specific plan"""
+    if plan_id not in SUBSCRIPTION_PLANS:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    return {"id": plan_id, **SUBSCRIPTION_PLANS[plan_id]}
+
+@api_router.post("/subscriptions/checkout")
+async def create_checkout_session(request: CreateCheckoutRequest, http_request: Request):
+    """Create a Stripe checkout session for subscription"""
+    try:
+        # Validate plan
+        if request.plan not in SUBSCRIPTION_PLANS or request.plan == "free":
+            raise HTTPException(status_code=400, detail="Invalid plan selected")
+        
+        plan = SUBSCRIPTION_PLANS[request.plan]
+        
+        # Get price based on billing cycle
+        if request.billing_cycle == "monthly":
+            amount = plan["price_monthly"]
+        elif request.billing_cycle == "quarterly":
+            amount = plan["price_quarterly"]
+        elif request.billing_cycle == "yearly":
+            amount = plan["price_yearly"]
+        else:
+            raise HTTPException(status_code=400, detail="Invalid billing cycle")
+        
+        # Build URLs
+        success_url = f"{request.origin_url}/subscription/success?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{request.origin_url}/pricing"
+        
+        # Initialize Stripe checkout
+        host_url = str(http_request.base_url)
+        webhook_url = f"{host_url}api/webhook/stripe"
+        stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+        
+        # Create checkout request with multiple payment methods
+        checkout_request = CheckoutSessionRequest(
+            amount=amount,
+            currency="usd",
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={
+                "email": request.email,
+                "plan": request.plan,
+                "billing_cycle": request.billing_cycle,
+                "type": "subscription"
+            },
+            payment_methods=["card"]  # Stripe handles Visa, Mastercard, Affirm, etc.
+        )
+        
+        # Create session
+        session = await stripe_checkout.create_checkout_session(checkout_request)
+        
+        # Store transaction record
+        transaction = PaymentTransaction(
+            user_id=request.email,
+            email=request.email,
+            amount=amount,
+            currency="usd",
+            plan=request.plan,
+            billing_cycle=request.billing_cycle,
+            session_id=session.session_id,
+            payment_status="pending",
+            status="initiated",
+            metadata={
+                "plan_name": plan["name"],
+                "features": plan["features"]
+            }
+        )
+        await db.payment_transactions.insert_one(transaction.model_dump())
+        
+        return {
+            "checkout_url": session.url,
+            "session_id": session.session_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Checkout error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create checkout: {str(e)}")
+
+@api_router.get("/subscriptions/status/{session_id}")
+async def get_checkout_status(session_id: str, http_request: Request):
+    """Get checkout session status and update subscription if paid"""
+    try:
+        # Initialize Stripe
+        host_url = str(http_request.base_url)
+        webhook_url = f"{host_url}api/webhook/stripe"
+        stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+        
+        # Get status from Stripe
+        status = await stripe_checkout.get_checkout_status(session_id)
+        
+        # Get transaction
+        transaction = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
+        
+        if not transaction:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+        
+        # Update transaction status
+        await db.payment_transactions.update_one(
+            {"session_id": session_id},
+            {"$set": {
+                "payment_status": status.payment_status,
+                "status": "completed" if status.payment_status == "paid" else transaction.get("status", "initiated"),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        # If paid, create or update subscription
+        if status.payment_status == "paid":
+            # Check if already processed
+            existing_sub = await db.subscriptions.find_one({
+                "user_id": transaction["email"],
+                "stripe_session_id": session_id
+            })
+            
+            if not existing_sub:
+                # Calculate period end based on billing cycle
+                now = datetime.now(timezone.utc)
+                if transaction["billing_cycle"] == "monthly":
+                    period_end = now + timedelta(days=30)
+                elif transaction["billing_cycle"] == "quarterly":
+                    period_end = now + timedelta(days=90)
+                else:  # yearly
+                    period_end = now + timedelta(days=365)
+                
+                # Create or update subscription
+                subscription = UserSubscription(
+                    user_id=transaction["email"],
+                    email=transaction["email"],
+                    plan=transaction["plan"],
+                    billing_cycle=transaction["billing_cycle"],
+                    status="active",
+                    current_period_start=now.isoformat(),
+                    current_period_end=period_end.isoformat(),
+                    stripe_session_id=session_id
+                )
+                
+                # Upsert subscription
+                await db.subscriptions.update_one(
+                    {"email": transaction["email"]},
+                    {"$set": subscription.model_dump()},
+                    upsert=True
+                )
+        
+        return {
+            "status": status.status,
+            "payment_status": status.payment_status,
+            "amount": status.amount_total / 100,  # Convert from cents
+            "currency": status.currency,
+            "plan": transaction.get("plan"),
+            "billing_cycle": transaction.get("billing_cycle")
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Status check error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/subscriptions/{email}")
+async def get_user_subscription(email: str):
+    """Get user's current subscription"""
+    subscription = await db.subscriptions.find_one({"email": email}, {"_id": 0})
+    
+    if not subscription:
+        # Return free plan for unsubscribed users
+        return {
+            "subscription": {
+                "email": email,
+                "plan": "free",
+                "status": "active"
+            },
+            "plan_details": SUBSCRIPTION_PLANS["free"],
+            "usage": {
+                "live_interviews_used": 0,
+                "live_interviews_limit": 5,
+                "mock_interviews_used": 0,
+                "code_sessions_used": 0
+            }
+        }
+    
+    plan_details = SUBSCRIPTION_PLANS.get(subscription.get("plan", "free"), SUBSCRIPTION_PLANS["free"])
+    
+    return {
+        "subscription": subscription,
+        "plan_details": plan_details,
+        "usage": {
+            "live_interviews_used": subscription.get("live_interviews_used", 0),
+            "live_interviews_limit": plan_details.get("live_interviews", 5),
+            "mock_interviews_used": subscription.get("mock_interviews_used", 0),
+            "code_sessions_used": subscription.get("code_sessions_used", 0)
+        }
+    }
+
+@api_router.post("/subscriptions/{email}/usage")
+async def track_usage(email: str, usage_type: str):
+    """Track usage for a user (live_interview, mock_interview, code_session)"""
+    valid_types = ["live_interview", "mock_interview", "code_session"]
+    if usage_type not in valid_types:
+        raise HTTPException(status_code=400, detail="Invalid usage type")
+    
+    field_map = {
+        "live_interview": "live_interviews_used",
+        "mock_interview": "mock_interviews_used",
+        "code_session": "code_sessions_used"
+    }
+    
+    await db.subscriptions.update_one(
+        {"email": email},
+        {"$inc": {field_map[usage_type]: 1}},
+        upsert=True
+    )
+    
+    return {"message": "Usage tracked"}
+
+@api_router.post("/webhook/stripe")
+async def stripe_webhook(request: Request):
+    """Handle Stripe webhooks"""
+    try:
+        body = await request.body()
+        signature = request.headers.get("Stripe-Signature")
+        
+        host_url = str(request.base_url)
+        webhook_url = f"{host_url}api/webhook/stripe"
+        stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+        
+        webhook_response = await stripe_checkout.handle_webhook(body, signature)
+        
+        # Update transaction based on webhook
+        if webhook_response.session_id:
+            await db.payment_transactions.update_one(
+                {"session_id": webhook_response.session_id},
+                {"$set": {
+                    "payment_status": webhook_response.payment_status,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+        
+        return {"status": "received"}
+    except Exception as e:
+        logger.error(f"Webhook error: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
 # Session Management
 @api_router.post("/sessions", response_model=Session)
 async def create_session(input: SessionCreate):
