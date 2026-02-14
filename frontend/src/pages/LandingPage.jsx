@@ -65,13 +65,23 @@ const LandingPage = () => {
             </div>
             <span className="font-secondary font-bold text-lg tracking-tight">STEALTH<span className="text-primary">INTERVIEW</span></span>
           </div>
-          <Button 
-            data-testid="nav-get-started-btn"
-            onClick={() => navigate("/dashboard")}
-            className="bg-primary hover:bg-primary/90 text-white rounded-sm font-bold tracking-wide btn-glow"
-          >
-            GET STARTED
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              data-testid="nav-pricing-btn"
+              variant="ghost"
+              onClick={() => navigate("/pricing")}
+              className="text-white/70 hover:text-white hover:bg-white/5 font-bold"
+            >
+              PRICING
+            </Button>
+            <Button 
+              data-testid="nav-get-started-btn"
+              onClick={() => navigate("/dashboard")}
+              className="bg-primary hover:bg-primary/90 text-white rounded-sm font-bold tracking-wide btn-glow"
+            >
+              GET STARTED
+            </Button>
+          </div>
         </div>
       </nav>
 
