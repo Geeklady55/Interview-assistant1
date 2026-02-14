@@ -240,7 +240,11 @@ async def create_session(input: SessionCreate):
     session = Session(
         name=input.name,
         interview_type=input.interview_type,
-        domain=input.domain
+        domain=input.domain,
+        job_description=input.job_description,
+        resume=input.resume,
+        company_name=input.company_name,
+        role_title=input.role_title
     )
     doc = session.model_dump()
     await db.sessions.insert_one(doc)
@@ -256,6 +260,21 @@ async def get_session(session_id: str):
     session = await db.sessions.find_one({"id": session_id}, {"_id": 0})
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
+    return session
+
+@api_router.put("/sessions/{session_id}", response_model=Session)
+async def update_session(session_id: str, update: SessionUpdate):
+    update_data = {k: v for k, v in update.model_dump().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.sessions.update_one(
+        {"id": session_id},
+        {"$set": update_data}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    session = await db.sessions.find_one({"id": session_id}, {"_id": 0})
     return session
 
 @api_router.delete("/sessions/{session_id}")
