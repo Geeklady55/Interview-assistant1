@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -36,6 +38,8 @@ import {
   Maximize2,
   Shield,
   History,
+  Keyboard,
+  Zap,
 } from "lucide-react";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -58,6 +62,7 @@ const LiveInterview = () => {
   const [question, setQuestion] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
+  const [useWhisper, setUseWhisper] = useState(false);
   
   // AI state
   const [aiModel, setAiModel] = useState("gpt-5.2");
@@ -69,8 +74,11 @@ const LiveInterview = () => {
   
   // Refs
   const recognitionRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
   const dragRef = useRef(null);
   const answerRef = useRef(null);
+  const textareaRef = useRef(null);
 
   // Fetch session data
   useEffect(() => {
@@ -100,9 +108,46 @@ const LiveInterview = () => {
     }
   };
 
-  // Speech recognition setup
+  // Keyboard shortcuts
   useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const handleKeyDown = (e) => {
+      // Ctrl/Cmd + Enter to submit
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (question.trim() && !isGenerating) {
+          generateAnswer();
+        }
+      }
+      // Escape to toggle stealth mode
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (stealthMode) {
+          setMinimized(!minimized);
+        } else {
+          setStealthMode(true);
+        }
+      }
+      // Ctrl/Cmd + M to toggle mic
+      if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
+        e.preventDefault();
+        toggleListening();
+      }
+      // Ctrl/Cmd + Shift + C to copy answer
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+        e.preventDefault();
+        if (currentAnswer) {
+          copyAnswer();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [question, isGenerating, stealthMode, minimized, currentAnswer]);
+
+  // Web Speech API setup
+  useEffect(() => {
+    if (!useWhisper && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = true;
@@ -137,7 +182,7 @@ const LiveInterview = () => {
       };
 
       recognitionRef.current.onend = () => {
-        if (isListening) {
+        if (isListening && !useWhisper) {
           recognitionRef.current.start();
         }
       };
@@ -148,16 +193,87 @@ const LiveInterview = () => {
         recognitionRef.current.stop();
       }
     };
-  }, [isListening]);
+  }, [isListening, useWhisper]);
+
+  // Whisper recording setup
+  const startWhisperRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      audioChunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        await transcribeWithWhisper(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorderRef.current.start(1000); // Collect data every second
+      setIsListening(true);
+    } catch (error) {
+      console.error("Failed to start recording:", error);
+      toast.error("Failed to access microphone");
+    }
+  };
+
+  const stopWhisperRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    setIsListening(false);
+  };
+
+  const transcribeWithWhisper = async (audioBlob) => {
+    try {
+      setTranscript("Transcribing...");
+      
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      
+      reader.onloadend = async () => {
+        const base64Audio = reader.result.split(',')[1];
+        
+        const response = await axios.post(`${API}/transcribe`, {
+          audio_base64: base64Audio,
+          language: "en"
+        });
+        
+        if (response.data.success) {
+          setQuestion(prev => prev + (prev ? ' ' : '') + response.data.text);
+          toast.success("Transcription complete!");
+        }
+        setTranscript("");
+      };
+    } catch (error) {
+      console.error("Transcription error:", error);
+      toast.error("Transcription failed");
+      setTranscript("");
+    }
+  };
 
   const toggleListening = () => {
     if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
+      if (useWhisper) {
+        stopWhisperRecording();
+      } else {
+        recognitionRef.current?.stop();
+        setIsListening(false);
+      }
       setTranscript("");
     } else {
-      recognitionRef.current?.start();
-      setIsListening(true);
+      if (useWhisper) {
+        startWhisperRecording();
+      } else {
+        recognitionRef.current?.start();
+        setIsListening(true);
+      }
     }
   };
 
@@ -258,9 +374,9 @@ const LiveInterview = () => {
   const renderContent = () => (
     <>
       {/* Controls */}
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
         <Select value={aiModel} onValueChange={setAiModel}>
-          <SelectTrigger data-testid="ai-model-select" className="w-[140px] h-8 text-xs bg-black/40 border-white/10">
+          <SelectTrigger data-testid="ai-model-select" className="w-[130px] h-8 text-xs bg-black/40 border-white/10">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-surface border-white/10">
@@ -270,7 +386,7 @@ const LiveInterview = () => {
           </SelectContent>
         </Select>
         <Select value={tone} onValueChange={setTone}>
-          <SelectTrigger data-testid="tone-select" className="w-[120px] h-8 text-xs bg-black/40 border-white/10">
+          <SelectTrigger data-testid="tone-select" className="w-[110px] h-8 text-xs bg-black/40 border-white/10">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-surface border-white/10">
@@ -280,7 +396,7 @@ const LiveInterview = () => {
           </SelectContent>
         </Select>
         <Select value={domain} onValueChange={setDomain}>
-          <SelectTrigger data-testid="domain-select" className="w-[130px] h-8 text-xs bg-black/40 border-white/10">
+          <SelectTrigger data-testid="domain-select" className="w-[120px] h-8 text-xs bg-black/40 border-white/10">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-surface border-white/10">
@@ -292,18 +408,44 @@ const LiveInterview = () => {
             <SelectItem value="technical_support">Tech Support</SelectItem>
           </SelectContent>
         </Select>
+        
+        {/* Whisper Toggle */}
+        <div className="flex items-center gap-2 ml-auto">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1.5">
+                  <Switch
+                    id="whisper-mode"
+                    checked={useWhisper}
+                    onCheckedChange={setUseWhisper}
+                    className="data-[state=checked]:bg-secondary"
+                  />
+                  <Label htmlFor="whisper-mode" className="text-xs text-white/50 cursor-pointer flex items-center gap-1">
+                    <Zap className="w-3 h-3" />
+                    Whisper
+                  </Label>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Use OpenAI Whisper for better transcription accuracy</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
 
       {/* Question Input */}
       <div className="relative mb-4">
         <Textarea
+          ref={textareaRef}
           data-testid="question-input"
-          placeholder="Type or speak your interview question..."
+          placeholder="Type or speak your interview question... (Ctrl+Enter to submit)"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           className="min-h-[80px] bg-black/40 border-white/10 focus:border-primary/50 resize-none font-primary text-sm pr-24"
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
               e.preventDefault();
               generateAnswer();
             }
@@ -332,7 +474,7 @@ const LiveInterview = () => {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {isListening ? 'Stop listening' : 'Start voice input'}
+                {isListening ? 'Stop listening (Ctrl+M)' : 'Start voice input (Ctrl+M)'}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -353,7 +495,9 @@ const LiveInterview = () => {
       {isListening && (
         <div className="flex items-center gap-2 mb-4 px-3 py-2 bg-destructive/10 border border-destructive/30 rounded-sm">
           <div className="recording-dot" />
-          <span className="text-xs font-mono text-destructive">LISTENING...</span>
+          <span className="text-xs font-mono text-destructive">
+            {useWhisper ? "RECORDING (WHISPER)..." : "LISTENING..."}
+          </span>
         </div>
       )}
 
@@ -371,7 +515,7 @@ const LiveInterview = () => {
                 className="h-6 px-2 text-xs"
               >
                 {copied ? <Check className="w-3 h-3 mr-1 text-secondary" /> : <Copy className="w-3 h-3 mr-1" />}
-                {copied ? 'Copied' : 'Copy'}
+                {copied ? 'Copied' : 'Copy (Ctrl+Shift+C)'}
               </Button>
             )}
           </div>
@@ -443,7 +587,7 @@ const LiveInterview = () => {
               <div className="flex items-center gap-2">
                 <GripVertical className="w-4 h-4 text-white/30" />
                 {!minimized && (
-                  <span className="text-xs font-mono text-white/50">STEALTH MODE</span>
+                  <span className="text-xs font-mono text-white/50">STEALTH (ESC to minimize)</span>
                 )}
               </div>
               <div className="flex items-center gap-1">
@@ -504,24 +648,38 @@ const LiveInterview = () => {
               </span>
             </div>
           </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  data-testid="stealth-mode-btn"
-                  variant="outline"
-                  onClick={() => setStealthMode(true)}
-                  className="border-primary/30 text-primary hover:bg-primary/10 font-bold"
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  STEALTH MODE
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Minimize to a floating overlay for video calls</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-white/50 hover:text-white"
+                  >
+                    <Keyboard className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <div className="text-xs space-y-1">
+                    <p><kbd className="px-1 bg-white/20 rounded">Ctrl+Enter</kbd> Submit question</p>
+                    <p><kbd className="px-1 bg-white/20 rounded">Ctrl+M</kbd> Toggle mic</p>
+                    <p><kbd className="px-1 bg-white/20 rounded">Ctrl+Shift+C</kbd> Copy answer</p>
+                    <p><kbd className="px-1 bg-white/20 rounded">Esc</kbd> Toggle stealth</p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <Button 
+              data-testid="stealth-mode-btn"
+              variant="outline"
+              onClick={() => setStealthMode(true)}
+              className="border-primary/30 text-primary hover:bg-primary/10 font-bold"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              STEALTH MODE
+            </Button>
+          </div>
         </div>
       </header>
 
