@@ -26,7 +26,7 @@ Create an interview assistant for job seekers in the technical field, for phone 
 - Mock interview practice with AI-generated questions
 - Job description and resume context for personalized answers
 
-## What's Been Implemented (v1.1.0) - Feb 14, 2026
+## What's Been Implemented (v1.2.0) - Feb 14, 2026
 
 ### Backend (FastAPI)
 - ✅ Session CRUD operations with job description/resume fields
@@ -37,6 +37,8 @@ Create an interview assistant for job seekers in the technical field, for phone 
 - ✅ Q&A history management
 - ✅ Settings persistence
 - ✅ MongoDB integration
+- ✅ **NEW: OpenAI Whisper transcription endpoint**
+- ✅ **NEW: Session export (JSON & Markdown formats)**
 
 ### Frontend (React)
 - ✅ Landing page with hero section and features
@@ -44,24 +46,38 @@ Create an interview assistant for job seekers in the technical field, for phone 
 - ✅ Live Interview mode with real-time transcription
 - ✅ Stealth mode overlay (draggable, semi-transparent)
 - ✅ Code Interview mode with split-pane editor
-- ✅ **NEW: Mock Interview mode for practice**
-- ✅ **NEW: Job description & resume input in session creation**
-- ✅ Session History page
+- ✅ Mock Interview mode for practice
+- ✅ Job description & resume input in session creation
+- ✅ Session History page with export functionality
 - ✅ Settings page (AI model, tone, stealth opacity)
 - ✅ Dark theme with Chivo/Manrope fonts
 - ✅ Framer Motion animations
+- ✅ **NEW: Keyboard shortcuts throughout app**
+- ✅ **NEW: Whisper transcription toggle**
+- ✅ **NEW: Export dropdown (JSON/Markdown)**
 
 ### Key Features Working
 - ✅ Web Speech API for voice input
+- ✅ **NEW: OpenAI Whisper for enhanced transcription**
 - ✅ AI model switching (GPT-5.2, Claude, Gemini)
 - ✅ Tone customization (Professional, Casual, Technical)
 - ✅ Domain expertise selection
 - ✅ Copy-to-clipboard functionality
 - ✅ Session persistence
 - ✅ Stealth mode with adjustable opacity
-- ✅ **NEW: Mock interview with AI-generated questions**
-- ✅ **NEW: Personalized answers based on job description/resume**
-- ✅ **NEW: Question tips and difficulty levels**
+- ✅ Mock interview with AI-generated questions
+- ✅ Personalized answers based on job description/resume
+- ✅ Question tips and difficulty levels
+- ✅ **NEW: Keyboard shortcuts (Ctrl+Enter, Ctrl+M, Esc, Ctrl+Shift+C)**
+- ✅ **NEW: Session export to JSON/Markdown**
+
+### Keyboard Shortcuts
+| Shortcut | Action |
+|----------|--------|
+| Ctrl+Enter | Submit question |
+| Ctrl+M | Toggle microphone |
+| Escape | Toggle stealth mode / Minimize |
+| Ctrl+Shift+C | Copy answer to clipboard |
 
 ## Prioritized Backlog
 
