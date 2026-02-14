@@ -189,10 +189,10 @@ CRITICAL RULES:
 """
     return base_prompt
 
-async def get_ai_response(question: str, ai_model: str, domain: str, tone: str, context: str = None) -> str:
+async def get_ai_response(question: str, ai_model: str, domain: str, tone: str, context: str = None, job_description: str = None, resume: str = None, company_name: str = None, role_title: str = None) -> str:
     """Generate AI response using the specified model."""
     
-    system_prompt = get_system_prompt(domain, tone)
+    system_prompt = get_system_prompt(domain, tone, job_description, resume, company_name, role_title)
     
     if context:
         full_question = f"Context:\n{context}\n\nQuestion: {question}"
