@@ -119,21 +119,31 @@ Create an interview assistant for job seekers in the technical field, for phone 
 ## Architecture
 ```
 Frontend (React + Tailwind)
-├── Landing Page
+├── Landing Page (with Desktop Downloads)
 ├── Dashboard
 ├── Live Interview Mode
 ├── Code Interview Mode
-├── Mock Interview Mode (NEW)
-├── Session History
+├── Mock Interview Mode
+├── Session History (with Export)
 └── Settings
 
 Backend (FastAPI)
 ├── /api/sessions (CRUD with job desc/resume)
 ├── /api/generate-answer (AI with context)
-├── /api/generate-mock-questions (NEW)
+├── /api/generate-mock-questions
 ├── /api/code-assist (Code AI)
+├── /api/transcribe (Whisper STT)
+├── /api/sessions/:id/export (JSON/Markdown)
 ├── /api/qa-pairs (History)
 └── /api/settings (Config)
+
+Desktop App (Electron)
+├── main.js (Window management, Tray, Shortcuts)
+├── preload.js (IPC bridge)
+├── assets/ (Icons)
+└── dist/ (Built installers)
+   ├── StealthInterview-Windows.exe
+   └── StealthInterview-Mac.dmg
 
 Database (MongoDB)
 ├── sessions (with job_description, resume, company_name, role_title)
@@ -143,11 +153,12 @@ Database (MongoDB)
 AI Integration (Emergent LLM)
 ├── OpenAI GPT-5.2
 ├── Anthropic Claude Sonnet 4.5
-└── Google Gemini 3 Flash
+├── Google Gemini 3 Flash
+└── OpenAI Whisper (STT)
 ```
 
 ## Next Tasks
-1. Add interview timer/countdown feature
-2. Add performance analytics (response time, topics covered)
-3. Browser extension for easier access during interviews
-4. Interview recording with consent
+1. Set up GitHub releases for desktop app distribution
+2. Add interview timer/countdown feature
+3. Add performance analytics dashboard
+4. Browser extension for easier access
