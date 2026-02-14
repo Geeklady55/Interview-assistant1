@@ -644,6 +644,313 @@ class StealthInterviewAPITester:
         self.tests_run += 1
         return success
 
+    # =============================================================================
+    # AUTO-UPDATE SERVER TESTS
+    # =============================================================================
+
+    def test_create_release(self):
+        """Test creating a new release"""
+        release_data = {
+            "version": "1.2.1",
+            "platform": "windows",
+            "download_url": "https://github.com/stealthinterview/desktop/releases/download/v1.2.1/StealthInterview-1.2.1-Windows-Setup.exe",
+            "release_notes": "Bug fixes and performance improvements",
+            "file_size": 89000000,
+            "sha512": "abc123def456ghi789jkl012mno345pqr678stu901vwx234yz567890abcdef123456789"
+        }
+        
+        success, response = self.run_test(
+            "Create Release",
+            "POST",
+            "releases",
+            200,
+            data=release_data
+        )
+        
+        if success:
+            print(f"   Created release version: {response.get('version', 'N/A')}")
+            print(f"   Platform: {response.get('platform', 'N/A')}")
+        return success
+
+    def test_create_mac_release(self):
+        """Test creating a Mac release"""
+        release_data = {
+            "version": "1.2.1",
+            "platform": "mac",
+            "download_url": "https://github.com/stealthinterview/desktop/releases/download/v1.2.1/StealthInterview-1.2.1-Mac-x64.dmg",
+            "release_notes": "Mac version with Apple Silicon support",
+            "file_size": 95000000,
+            "sha512": "def456ghi789jkl012mno345pqr678stu901vwx234yz567890abcdef123456789abc123"
+        }
+        
+        success, response = self.run_test(
+            "Create Mac Release",
+            "POST",
+            "releases",
+            200,
+            data=release_data
+        )
+        
+        if success:
+            print(f"   Created Mac release version: {response.get('version', 'N/A')}")
+        return success
+
+    def test_create_older_windows_release(self):
+        """Test creating an older Windows release for update testing"""
+        release_data = {
+            "version": "1.0.0",
+            "platform": "windows",
+            "download_url": "https://github.com/stealthinterview/desktop/releases/download/v1.0.0/StealthInterview-1.0.0-Windows-Setup.exe",
+            "release_notes": "Initial release",
+            "file_size": 85000000,
+            "sha512": "old123def456ghi789jkl012mno345pqr678stu901vwx234yz567890abcdef123456789"
+        }
+        
+        success, response = self.run_test(
+            "Create Older Windows Release",
+            "POST",
+            "releases",
+            200,
+            data=release_data
+        )
+        
+        if success:
+            print(f"   Created older release version: {response.get('version', 'N/A')}")
+        return success
+
+    def test_get_latest_releases(self):
+        """Test getting latest releases for all platforms"""
+        success, response = self.run_test(
+            "Get Latest Releases (All Platforms)",
+            "GET",
+            "releases/latest",
+            200
+        )
+        
+        if success and 'releases' in response:
+            releases = response['releases']
+            print(f"   Found {len(releases)} latest releases")
+            
+            # Check platforms
+            platforms = [r.get('platform') for r in releases]
+            print(f"   Platforms: {', '.join(platforms)}")
+            
+            # Verify each release has required fields
+            for release in releases:
+                if all(field in release for field in ['version', 'platform', 'download_url']):
+                    print(f"   ✅ {release['platform']} v{release['version']} - Complete")
+                else:
+                    print(f"   ❌ {release.get('platform', 'Unknown')} - Missing fields")
+                    success = False
+        return success
+
+    def test_get_latest_windows_release(self):
+        """Test getting latest Windows release"""
+        success, response = self.run_test(
+            "Get Latest Windows Release",
+            "GET",
+            "releases/latest/windows",
+            200
+        )
+        
+        if success:
+            print(f"   Windows version: {response.get('version', 'N/A')}")
+            print(f"   Download URL: {response.get('download_url', 'N/A')}")
+            print(f"   File size: {response.get('file_size', 'N/A')} bytes")
+            print(f"   Is latest: {response.get('is_latest', False)}")
+            
+            # Verify required fields
+            required_fields = ['version', 'platform', 'download_url', 'created_at']
+            missing_fields = [field for field in required_fields if field not in response]
+            if missing_fields:
+                print(f"   ❌ Missing fields: {', '.join(missing_fields)}")
+                success = False
+            else:
+                print(f"   ✅ All required fields present")
+        return success
+
+    def test_get_latest_mac_release(self):
+        """Test getting latest Mac release"""
+        success, response = self.run_test(
+            "Get Latest Mac Release",
+            "GET",
+            "releases/latest/mac",
+            200
+        )
+        
+        if success:
+            print(f"   Mac version: {response.get('version', 'N/A')}")
+            print(f"   Download URL: {response.get('download_url', 'N/A')}")
+            print(f"   File size: {response.get('file_size', 'N/A')} bytes")
+            print(f"   Is latest: {response.get('is_latest', False)}")
+        return success
+
+    def test_check_updates_windows_old_version(self):
+        """Test checking for updates with old Windows version"""
+        success, response = self.run_test(
+            "Check Updates (Windows v1.0.0)",
+            "GET",
+            "updates/windows?current_version=1.0.0",
+            200
+        )
+        
+        if success:
+            update_available = response.get('update_available', False)
+            print(f"   Update available: {update_available}")
+            
+            if update_available:
+                print(f"   New version: {response.get('version', 'N/A')}")
+                print(f"   Download URL: {response.get('url', 'N/A')}")
+                print(f"   SHA512: {response.get('sha512', 'N/A')[:20]}...")
+                print(f"   Release notes: {response.get('releaseNotes', 'N/A')[:50]}...")
+                
+                # Verify electron-updater compatible format
+                required_fields = ['version', 'url']
+                missing_fields = [field for field in required_fields if field not in response]
+                if missing_fields:
+                    print(f"   ❌ Missing electron-updater fields: {', '.join(missing_fields)}")
+                    success = False
+                else:
+                    print(f"   ✅ Electron-updater compatible format")
+            else:
+                print(f"   ❌ Expected update to be available for v1.0.0")
+                success = False
+        return success
+
+    def test_check_updates_windows_current_version(self):
+        """Test checking for updates with current Windows version"""
+        success, response = self.run_test(
+            "Check Updates (Windows v1.2.1)",
+            "GET",
+            "updates/windows?current_version=1.2.1",
+            200
+        )
+        
+        if success:
+            update_available = response.get('update_available', False)
+            print(f"   Update available: {update_available}")
+            
+            if not update_available:
+                print(f"   ✅ No update needed for current version")
+                current_version = response.get('current_version')
+                if current_version:
+                    print(f"   Current version: {current_version}")
+            else:
+                print(f"   ⚠️  Update available even for latest version")
+                print(f"   New version: {response.get('version', 'N/A')}")
+        return success
+
+    def test_check_updates_no_version(self):
+        """Test checking for updates without specifying current version"""
+        success, response = self.run_test(
+            "Check Updates (No Version)",
+            "GET",
+            "updates/windows",
+            200
+        )
+        
+        if success:
+            update_available = response.get('update_available', False)
+            print(f"   Update available: {update_available}")
+            
+            if update_available:
+                print(f"   Latest version: {response.get('version', 'N/A')}")
+                print(f"   Download URL: {response.get('url', 'N/A')}")
+        return success
+
+    def test_get_update_yml_windows(self):
+        """Test getting update YAML for electron-updater (Windows)"""
+        success, response = self.run_test(
+            "Get Update YAML (Windows)",
+            "GET",
+            "updates/windows/latest.yml",
+            200
+        )
+        
+        # For YAML endpoint, response will be text, not JSON
+        if success:
+            print(f"   ✅ YAML endpoint accessible")
+            # Note: response would be YAML text, not JSON
+        return success
+
+    def test_get_update_yml_mac(self):
+        """Test getting update YAML for electron-updater (Mac)"""
+        success, response = self.run_test(
+            "Get Update YAML (Mac)",
+            "GET",
+            "updates/mac/latest.yml",
+            200
+        )
+        
+        if success:
+            print(f"   ✅ Mac YAML endpoint accessible")
+        return success
+
+    def test_list_all_releases(self):
+        """Test listing all releases"""
+        success, response = self.run_test(
+            "List All Releases",
+            "GET",
+            "releases",
+            200
+        )
+        
+        if success and 'releases' in response:
+            releases = response['releases']
+            total = response.get('total', len(releases))
+            print(f"   Found {len(releases)} releases (total: {total})")
+            
+            # Group by platform
+            platforms = {}
+            for release in releases:
+                platform = release.get('platform', 'unknown')
+                if platform not in platforms:
+                    platforms[platform] = []
+                platforms[platform].append(release.get('version', 'unknown'))
+            
+            for platform, versions in platforms.items():
+                print(f"   {platform}: {', '.join(versions)}")
+        return success
+
+    def test_list_releases_by_platform(self):
+        """Test listing releases filtered by platform"""
+        success, response = self.run_test(
+            "List Windows Releases",
+            "GET",
+            "releases?platform=windows",
+            200
+        )
+        
+        if success and 'releases' in response:
+            releases = response['releases']
+            print(f"   Found {len(releases)} Windows releases")
+            
+            # Verify all are Windows releases
+            non_windows = [r for r in releases if r.get('platform') != 'windows']
+            if non_windows:
+                print(f"   ❌ Found {len(non_windows)} non-Windows releases in filtered results")
+                success = False
+            else:
+                print(f"   ✅ All releases are Windows platform")
+                
+            # Show versions
+            versions = [r.get('version', 'unknown') for r in releases]
+            print(f"   Versions: {', '.join(versions)}")
+        return success
+
+    def test_nonexistent_platform_release(self):
+        """Test getting release for non-existent platform"""
+        success, response = self.run_test(
+            "Get Non-existent Platform Release",
+            "GET",
+            "releases/latest/nonexistent",
+            404  # Should return 404 for non-existent platform
+        )
+        
+        if success:
+            print(f"   ✅ Correctly returns 404 for non-existent platform")
+        return success
+
 def main():
     print("🚀 Starting StealthInterview.ai API Tests")
     print("=" * 50)
