@@ -505,6 +505,114 @@ Return ONLY a valid JSON array with the questions. No other text."""
         logger.error(f"Error generating mock questions: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate questions: {str(e)}")
 
+# Whisper Transcription
+class TranscribeRequest(BaseModel):
+    audio_base64: str
+    language: str = "en"
+
+@api_router.post("/transcribe")
+async def transcribe_audio(request: TranscribeRequest):
+    """Transcribe audio using OpenAI Whisper"""
+    try:
+        # Decode base64 audio
+        audio_data = base64.b64decode(request.audio_base64)
+        
+        # Write to temporary file
+        with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as temp_file:
+            temp_file.write(audio_data)
+            temp_path = temp_file.name
+        
+        try:
+            # Initialize Whisper STT
+            stt = OpenAISpeechToText(api_key=EMERGENT_LLM_KEY)
+            
+            # Transcribe
+            with open(temp_path, "rb") as audio_file:
+                response = await stt.transcribe(
+                    file=audio_file,
+                    model="whisper-1",
+                    response_format="json",
+                    language=request.language,
+                    prompt="This is a technical job interview conversation."
+                )
+            
+            return {"text": response.text, "success": True}
+        finally:
+            # Clean up temp file
+            os.unlink(temp_path)
+            
+    except Exception as e:
+        logger.error(f"Transcription error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
+
+# Session Export
+@api_router.get("/sessions/{session_id}/export")
+async def export_session(session_id: str, format: str = "json"):
+    """Export session data including all Q&A pairs"""
+    try:
+        # Get session
+        session = await db.sessions.find_one({"id": session_id}, {"_id": 0})
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        # Get Q&A pairs
+        qa_pairs = await db.qa_pairs.find({"session_id": session_id}, {"_id": 0}).sort("created_at", 1).to_list(1000)
+        
+        export_data = {
+            "session": session,
+            "qa_pairs": qa_pairs,
+            "exported_at": datetime.now(timezone.utc).isoformat(),
+            "total_questions": len(qa_pairs)
+        }
+        
+        if format == "json":
+            return JSONResponse(content=export_data)
+        elif format == "markdown":
+            # Generate markdown format
+            md_content = f"""# Interview Session: {session.get('name', 'Untitled')}
+
+## Session Details
+- **Company:** {session.get('company_name', 'N/A')}
+- **Role:** {session.get('role_title', 'N/A')}
+- **Interview Type:** {session.get('interview_type', 'N/A')}
+- **Domain:** {session.get('domain', 'N/A')}
+- **Created:** {session.get('created_at', 'N/A')}
+
+"""
+            if session.get('job_description'):
+                md_content += f"""## Job Description
+{session.get('job_description')}
+
+"""
+            if session.get('resume'):
+                md_content += f"""## Resume/Background
+{session.get('resume')}
+
+"""
+            md_content += "## Questions & Answers\n\n"
+            
+            for i, qa in enumerate(qa_pairs, 1):
+                md_content += f"""### Question {i}
+**Q:** {qa.get('question', '')}
+
+**A:** {qa.get('answer', '')}
+
+*Model: {qa.get('ai_model', 'N/A')} | Tone: {qa.get('tone', 'N/A')}*
+
+---
+
+"""
+            
+            return JSONResponse(content={"markdown": md_content, "session_name": session.get('name', 'session')})
+        else:
+            return JSONResponse(content=export_data)
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Export error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
