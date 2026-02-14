@@ -146,8 +146,45 @@ const SessionHistory = () => {
         return Video;
       case "coding":
         return Code;
+      case "mock":
+        return Brain;
       default:
         return MessageSquare;
+    }
+  };
+
+  const exportSession = async (format) => {
+    if (!selectedSession) return;
+    
+    try {
+      const response = await axios.get(`${API}/sessions/${selectedSession.id}/export?format=${format}`);
+      
+      if (format === "json") {
+        const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${selectedSession.name.replace(/\s+/g, '_')}_export.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success("Session exported as JSON!");
+      } else if (format === "markdown") {
+        const blob = new Blob([response.data.markdown], { type: "text/markdown" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${selectedSession.name.replace(/\s+/g, '_')}_export.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success("Session exported as Markdown!");
+      }
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export session");
     }
   };
 
