@@ -99,6 +99,34 @@ class StealthInterviewAPITester:
             print(f"   Session ID: {self.session_id}")
         return success
 
+    def test_create_mock_session(self):
+        """Test mock session creation with job description and resume"""
+        session_data = {
+            "name": f"Mock Interview Test {datetime.now().strftime('%H:%M:%S')}",
+            "interview_type": "mock",
+            "domain": "frontend",
+            "job_description": "We are looking for a Senior Frontend Developer with React experience. Must have 5+ years of experience with modern JavaScript frameworks.",
+            "resume": "Frontend Developer with 6 years experience in React, TypeScript, and modern web technologies. Built scalable applications for Fortune 500 companies.",
+            "company_name": "Google",
+            "role_title": "Senior Frontend Engineer"
+        }
+        
+        success, response = self.run_test(
+            "Create Mock Session with Context",
+            "POST",
+            "sessions",
+            200,
+            data=session_data
+        )
+        
+        if success and 'id' in response:
+            print(f"   Mock Session ID: {response['id']}")
+            print(f"   Company: {response.get('company_name', 'N/A')}")
+            print(f"   Role: {response.get('role_title', 'N/A')}")
+            print(f"   Has Job Description: {bool(response.get('job_description'))}")
+            print(f"   Has Resume: {bool(response.get('resume'))}")
+        return success
+
     def test_get_sessions(self):
         """Test getting all sessions"""
         success, response = self.run_test(
