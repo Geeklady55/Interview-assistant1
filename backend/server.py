@@ -616,6 +616,75 @@ async def export_session(session_id: str, format: str = "json"):
         logger.error(f"Export error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
 
+# Desktop App Download
+@api_router.get("/desktop/download")
+async def download_desktop_app(platform: str = "windows"):
+    """Download desktop app source code as a zip file"""
+    try:
+        if not DESKTOP_DIR.exists():
+            raise HTTPException(status_code=404, detail="Desktop app not found")
+        
+        # Create zip file in memory
+        zip_buffer = io.BytesIO()
+        
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            # Files to include
+            files_to_include = [
+                'main.js',
+                'preload.js',
+                'package.json',
+                'README.md',
+                'build.sh',
+                'assets/icon.svg'
+            ]
+            
+            for file_path in files_to_include:
+                full_path = DESKTOP_DIR / file_path
+                if full_path.exists():
+                    # Add to zip with folder structure
+                    zip_file.write(full_path, f"StealthInterview-Desktop/{file_path}")
+            
+            # Create a platform-specific build script
+            if platform == "windows":
+                build_content = """@echo off
+echo Installing dependencies...
+call yarn install
+echo Building for Windows...
+call yarn build:win
+echo.
+echo Build complete! Check the dist folder for StealthInterview-Windows.exe
+pause
+"""
+                zip_file.writestr("StealthInterview-Desktop/build-windows.bat", build_content)
+            else:
+                build_content = """#!/bin/bash
+echo "Installing dependencies..."
+yarn install
+echo "Building for macOS..."
+yarn build:mac
+echo ""
+echo "Build complete! Check the dist folder for StealthInterview-Mac.dmg"
+"""
+                zip_file.writestr("StealthInterview-Desktop/build-mac.sh", build_content)
+        
+        zip_buffer.seek(0)
+        
+        filename = f"StealthInterview-Desktop-{platform.capitalize()}.zip"
+        
+        return StreamingResponse(
+            zip_buffer,
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Desktop download error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
