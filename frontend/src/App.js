@@ -5,6 +5,7 @@ import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
 import LiveInterview from "@/pages/LiveInterview";
 import CodeInterview from "@/pages/CodeInterview";
+import MockInterview from "@/pages/MockInterview";
 import SessionHistory from "@/pages/SessionHistory";
 import Settings from "@/pages/Settings";
 
@@ -19,6 +20,7 @@ function App() {
           <Route path="/live-interview/:sessionId" element={<LiveInterview />} />
           <Route path="/code-interview" element={<CodeInterview />} />
           <Route path="/code-interview/:sessionId" element={<CodeInterview />} />
+          <Route path="/mock-interview/:sessionId" element={<MockInterview />} />
           <Route path="/history" element={<SessionHistory />} />
           <Route path="/history/:sessionId" element={<SessionHistory />} />
           <Route path="/settings" element={<Settings />} />
