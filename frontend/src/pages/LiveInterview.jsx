@@ -432,8 +432,77 @@ const LiveInterview = () => {
   }, [isDragging, handleDrag, handleDragEnd]);
 
   // Render content based on mode
-  const renderContent = () => (
+  const renderContent = () => {
+    // Format time display
+    const formatTime = (seconds) => {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+    
+    const limitSeconds = durationLimit * 60;
+    const remaining = Math.max(0, limitSeconds - elapsedTime);
+    const progress = (elapsedTime / limitSeconds) * 100;
+    const isLowTime = remaining <= 120;
+    
+    return (
     <>
+      {/* Session Timer */}
+      <div className={`mb-4 p-3 rounded-sm border ${
+        sessionExpired ? 'bg-destructive/10 border-destructive/30' :
+        isLowTime ? 'bg-orange-500/10 border-orange-500/30' :
+        'bg-black/40 border-white/10'
+      }`}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Clock className={`w-4 h-4 ${
+              sessionExpired ? 'text-destructive' :
+              isLowTime ? 'text-orange-400' :
+              'text-primary'
+            }`} />
+            <span className="text-xs font-mono uppercase tracking-wide text-white/70">
+              Session Time
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className={`text-sm font-mono font-bold ${
+              sessionExpired ? 'text-destructive' :
+              isLowTime ? 'text-orange-400' :
+              'text-white'
+            }`}>
+              {formatTime(elapsedTime)} / {formatTime(limitSeconds)}
+            </span>
+            {isLowTime && !sessionExpired && (
+              <span className="text-xs text-orange-400 animate-pulse flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {formatTime(remaining)} left
+              </span>
+            )}
+          </div>
+        </div>
+        <Progress 
+          value={Math.min(progress, 100)} 
+          className={`h-1.5 ${
+            sessionExpired ? 'bg-destructive/20' :
+            isLowTime ? 'bg-orange-500/20' :
+            'bg-white/10'
+          }`}
+        />
+        {sessionExpired && (
+          <div className="mt-2 flex items-center justify-between">
+            <span className="text-xs text-destructive">Session expired. Upgrade for longer sessions.</span>
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="h-6 text-xs border-primary/30 text-primary hover:bg-primary/10"
+              onClick={() => navigate('/pricing')}
+            >
+              Upgrade Plan
+            </Button>
+          </div>
+        )}
+      </div>
+    
       {/* Controls */}
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         <Select value={aiModel} onValueChange={setAiModel}>
