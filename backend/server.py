@@ -183,6 +183,57 @@ class SessionUpdate(BaseModel):
     company_name: Optional[str] = None
     role_title: Optional[str] = None
 
+# =============================================================================
+# SUBSCRIPTION MODELS
+# =============================================================================
+
+class UserSubscription(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str  # Can be email or unique identifier
+    email: str
+    plan: str = "free"  # free, beginner, advanced, executive
+    billing_cycle: str = "monthly"  # monthly, quarterly, yearly
+    status: str = "active"  # active, cancelled, expired, past_due
+    current_period_start: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    current_period_end: Optional[str] = None
+    stripe_customer_id: Optional[str] = None
+    stripe_subscription_id: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    # Usage tracking
+    live_interviews_used: int = 0
+    mock_interviews_used: int = 0
+    code_sessions_used: int = 0
+
+class PaymentTransaction(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    email: str
+    amount: float
+    currency: str = "usd"
+    plan: str
+    billing_cycle: str
+    session_id: str  # Stripe checkout session ID
+    payment_status: str = "pending"  # pending, paid, failed, expired
+    status: str = "initiated"  # initiated, completed, failed, cancelled
+    metadata: Optional[Dict] = None
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class CreateCheckoutRequest(BaseModel):
+    email: str
+    plan: str  # beginner, advanced, executive
+    billing_cycle: str = "monthly"  # monthly, quarterly, yearly
+    origin_url: str  # Frontend origin for redirect URLs
+
+class SubscriptionResponse(BaseModel):
+    subscription: Optional[Dict] = None
+    plan_details: Optional[Dict] = None
+    usage: Optional[Dict] = None
+
+
 # App Release/Update Models
 class AppRelease(BaseModel):
     model_config = ConfigDict(extra="ignore")
