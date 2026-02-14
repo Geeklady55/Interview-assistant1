@@ -961,9 +961,29 @@ def main():
     tests = [
         tester.test_health_check,
         tester.test_health_endpoint,
-        tester.test_desktop_download_windows,  # Test desktop downloads first
+        
+        # Auto-update server tests (new functionality)
+        tester.test_create_older_windows_release,  # Create older version first
+        tester.test_create_release,  # Create newer Windows release
+        tester.test_create_mac_release,  # Create Mac release
+        tester.test_get_latest_releases,
+        tester.test_get_latest_windows_release,
+        tester.test_get_latest_mac_release,
+        tester.test_check_updates_windows_old_version,
+        tester.test_check_updates_windows_current_version,
+        tester.test_check_updates_no_version,
+        tester.test_get_update_yml_windows,
+        tester.test_get_update_yml_mac,
+        tester.test_list_all_releases,
+        tester.test_list_releases_by_platform,
+        tester.test_nonexistent_platform_release,
+        
+        # Desktop download tests
+        tester.test_desktop_download_windows,
         tester.test_desktop_download_mac,
         tester.test_desktop_download_zip_contents,
+        
+        # Session and AI tests
         tester.test_create_session,
         tester.test_create_mock_session,
         tester.test_get_sessions,
