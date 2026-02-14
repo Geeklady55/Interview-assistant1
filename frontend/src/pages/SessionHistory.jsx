@@ -336,21 +336,54 @@ const SessionHistory = () => {
                       {selectedSession?.name || "SELECT A SESSION"}
                     </CardTitle>
                     {selectedSession && (
-                      <Button
-                        data-testid="continue-session-btn"
-                        size="sm"
-                        onClick={() => {
-                          if (selectedSession.interview_type === "coding") {
-                            navigate(`/code-interview/${selectedSession.id}`);
-                          } else {
-                            navigate(`/live-interview/${selectedSession.id}`);
-                          }
-                        }}
-                        className="bg-primary hover:bg-primary/90 font-bold text-xs"
-                      >
-                        Continue
-                        <ChevronRight className="w-3 h-3 ml-1" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              data-testid="export-session-btn"
+                              variant="outline"
+                              size="sm"
+                              className="border-white/10 hover:border-white/20"
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Export
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="bg-surface border-white/10">
+                            <DropdownMenuItem 
+                              onClick={() => exportSession("json")}
+                              className="cursor-pointer"
+                            >
+                              <FileJson className="w-4 h-4 mr-2" />
+                              Export as JSON
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => exportSession("markdown")}
+                              className="cursor-pointer"
+                            >
+                              <FileText className="w-4 h-4 mr-2" />
+                              Export as Markdown
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button
+                          data-testid="continue-session-btn"
+                          size="sm"
+                          onClick={() => {
+                            if (selectedSession.interview_type === "coding") {
+                              navigate(`/code-interview/${selectedSession.id}`);
+                            } else if (selectedSession.interview_type === "mock") {
+                              navigate(`/mock-interview/${selectedSession.id}`);
+                            } else {
+                              navigate(`/live-interview/${selectedSession.id}`);
+                            }
+                          }}
+                          className="bg-primary hover:bg-primary/90 font-bold text-xs"
+                        >
+                          Continue
+                          <ChevronRight className="w-3 h-3 ml-1" />
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </CardHeader>
