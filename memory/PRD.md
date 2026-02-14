@@ -145,20 +145,29 @@ Backend (FastAPI)
 ├── /api/transcribe (Whisper STT)
 ├── /api/sessions/:id/export (JSON/Markdown)
 ├── /api/qa-pairs (History)
-└── /api/settings (Config)
+├── /api/settings (Config)
+├── /api/desktop/download (Source code download)
+├── /api/releases (Release management)
+├── /api/releases/latest (Latest versions)
+└── /api/updates/:platform (Auto-update check)
 
 Desktop App (Electron)
-├── main.js (Window management, Tray, Shortcuts)
+├── main.js (Window management, Tray, Shortcuts, Auto-update)
 ├── preload.js (IPC bridge)
+├── entitlements.mac.plist (Mac code signing)
 ├── assets/ (Icons)
+├── .github/workflows/ (CI/CD)
+│   └── build-release.yml
 └── dist/ (Built installers)
    ├── StealthInterview-Windows.exe
-   └── StealthInterview-Mac.dmg
+   ├── StealthInterview-Mac-x64.dmg
+   └── StealthInterview-Mac-arm64.dmg
 
 Database (MongoDB)
-├── sessions (with job_description, resume, company_name, role_title)
+├── sessions
 ├── qa_pairs
-└── settings
+├── settings
+└── releases (version management)
 
 AI Integration (Emergent LLM)
 ├── OpenAI GPT-5.2
@@ -167,8 +176,24 @@ AI Integration (Emergent LLM)
 └── OpenAI Whisper (STT)
 ```
 
+## CI/CD Pipeline
+```
+[Push Tag v*] → GitHub Actions
+                    ├── Build Windows (windows-latest)
+                    │   └── electron-builder --win
+                    ├── Build Mac (macos-latest)
+                    │   ├── electron-builder --mac --x64
+                    │   └── electron-builder --mac --arm64
+                    └── Build Linux (ubuntu-latest)
+                        └── electron-builder --linux
+                              ↓
+                    [Create GitHub Release]
+                              ↓
+                    [Notify Update Server]
+```
+
 ## Next Tasks
-1. Set up GitHub releases for desktop app distribution
-2. Add interview timer/countdown feature
-3. Add performance analytics dashboard
-4. Browser extension for easier access
+1. Set up actual GitHub repository for release hosting
+2. Purchase Windows code signing certificate
+3. Enroll in Apple Developer Program for notarization
+4. Add interview timer/countdown feature
