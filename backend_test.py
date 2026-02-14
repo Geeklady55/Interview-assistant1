@@ -654,6 +654,9 @@ def main():
     tests = [
         tester.test_health_check,
         tester.test_health_endpoint,
+        tester.test_desktop_download_windows,  # Test desktop downloads first
+        tester.test_desktop_download_mac,
+        tester.test_desktop_download_zip_contents,
         tester.test_create_session,
         tester.test_create_mock_session,
         tester.test_get_sessions,
