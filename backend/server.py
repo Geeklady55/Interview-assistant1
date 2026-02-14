@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -15,8 +15,11 @@ from emergentintegrations.llm.openai import OpenAISpeechToText
 import base64
 import tempfile
 import json
+import zipfile
+import io
 
 ROOT_DIR = Path(__file__).parent
+DESKTOP_DIR = ROOT_DIR.parent / 'desktop'
 load_dotenv(ROOT_DIR / '.env')
 
 # MongoDB connection
