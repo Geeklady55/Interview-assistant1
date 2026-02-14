@@ -299,6 +299,103 @@ class StealthInterviewAPITester:
         )
         return success
 
+    def test_update_session(self):
+        """Test updating session with job description and resume"""
+        if not self.session_id:
+            print("❌ No session ID available for testing")
+            return False
+            
+        update_data = {
+            "job_description": "Updated job description: Looking for a React developer with Redux experience.",
+            "resume": "Updated resume: 7 years of React development experience with Redux, TypeScript, and testing.",
+            "company_name": "Meta",
+            "role_title": "Staff Frontend Engineer"
+        }
+        
+        success, response = self.run_test(
+            "Update Session Context",
+            "PUT",
+            f"sessions/{self.session_id}",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            print(f"   Updated Company: {response.get('company_name', 'N/A')}")
+            print(f"   Updated Role: {response.get('role_title', 'N/A')}")
+        return success
+
+    def test_generate_mock_questions(self):
+        """Test mock interview questions generation"""
+        mock_data = {
+            "domain": "frontend",
+            "job_description": "We need a React developer with TypeScript experience for building scalable web applications.",
+            "resume": "Frontend developer with 5 years React experience, TypeScript expert, worked on large-scale applications.",
+            "count": 5,
+            "ai_model": "gpt-5.2"
+        }
+        
+        success, response = self.run_test(
+            "Generate Mock Questions",
+            "POST",
+            "generate-mock-questions",
+            200,
+            data=mock_data
+        )
+        
+        if success and 'questions' in response:
+            questions = response['questions']
+            print(f"   Generated {len(questions)} questions")
+            print(f"   AI Model: {response.get('ai_model', 'N/A')}")
+            
+            # Check question structure
+            if questions and len(questions) > 0:
+                first_q = questions[0]
+                print(f"   Sample Question Category: {first_q.get('category', 'N/A')}")
+                print(f"   Sample Question Difficulty: {first_q.get('difficulty', 'N/A')}")
+                print(f"   Sample Question: {first_q.get('question', 'N/A')[:100]}...")
+        return success
+
+    def test_generate_answer_with_context(self):
+        """Test AI answer generation with session context"""
+        if not self.session_id:
+            print("❌ No session ID available for testing")
+            return False
+            
+        answer_data = {
+            "question": "Tell me about your experience with React and why you're interested in this role.",
+            "ai_model": "gpt-5.2",
+            "tone": "professional",
+            "domain": "frontend",
+            "session_id": self.session_id,
+            "job_description": "Senior React Developer position requiring TypeScript and Redux experience.",
+            "resume": "5+ years React developer with TypeScript, Redux, and modern web development experience.",
+            "company_name": "Google",
+            "role_title": "Senior Frontend Engineer"
+        }
+        
+        success, response = self.run_test(
+            "Generate Answer with Context",
+            "POST",
+            "generate-answer",
+            200,
+            data=answer_data
+        )
+        
+        if success and 'answer' in response:
+            answer = response['answer']
+            print(f"   Answer Length: {len(answer)} chars")
+            print(f"   AI Model: {response.get('ai_model', 'N/A')}")
+            
+            # Check if answer seems personalized (contains context keywords)
+            context_keywords = ['react', 'typescript', 'google', 'frontend', 'experience']
+            found_keywords = [kw for kw in context_keywords if kw.lower() in answer.lower()]
+            print(f"   Context Keywords Found: {len(found_keywords)}/{len(context_keywords)}")
+            
+            if self.qa_id:
+                print(f"   QA ID: {self.qa_id}")
+        return success
+
 def main():
     print("🚀 Starting StealthInterview.ai API Tests")
     print("=" * 50)
