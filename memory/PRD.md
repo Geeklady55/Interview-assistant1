@@ -134,6 +134,7 @@ AI Integration (Emergent LLM)
 ```
 
 ## Next Tasks
-1. Add keyboard shortcuts (Ctrl+Enter to submit, Escape to toggle stealth)
-2. Implement OpenAI Whisper for better transcription
-3. Add session export functionality (PDF/JSON)
+1. Add interview timer/countdown feature
+2. Add performance analytics (response time, topics covered)
+3. Browser extension for easier access during interviews
+4. Interview recording with consent
