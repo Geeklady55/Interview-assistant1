@@ -101,6 +101,10 @@ class GenerateAnswerRequest(BaseModel):
     domain: str = "general"
     session_id: Optional[str] = None
     context: Optional[str] = None  # Additional context like code or previous Q&A
+    job_description: Optional[str] = None
+    resume: Optional[str] = None
+    company_name: Optional[str] = None
+    role_title: Optional[str] = None
 
 class GenerateAnswerResponse(BaseModel):
     answer: str
