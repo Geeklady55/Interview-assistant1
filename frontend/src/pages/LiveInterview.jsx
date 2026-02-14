@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -40,6 +41,8 @@ import {
   History,
   Keyboard,
   Zap,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -51,6 +54,13 @@ const LiveInterview = () => {
   // Session state
   const [session, setSession] = useState(null);
   const [qaHistory, setQaHistory] = useState([]);
+  
+  // Timer state
+  const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [durationLimit, setDurationLimit] = useState(15); // Default 15 mins
+  const [timeWarning, setTimeWarning] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
   
   // UI state
   const [stealthMode, setStealthMode] = useState(false);
