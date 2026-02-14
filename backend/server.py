@@ -31,6 +31,112 @@ db = client[os.environ['DB_NAME']]
 # Emergent LLM Key
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
 
+# Stripe Key
+STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY', '')
+
+# =============================================================================
+# SUBSCRIPTION PLANS CONFIGURATION
+# =============================================================================
+
+SUBSCRIPTION_PLANS = {
+    "free": {
+        "name": "Free",
+        "price_monthly": 0.00,
+        "price_quarterly": 0.00,
+        "price_yearly": 0.00,
+        "live_interviews": 5,
+        "session_duration_minutes": 15,
+        "features": [
+            "5 live interview sessions/month",
+            "15 minute session limit",
+            "Basic AI assistance",
+            "Web Speech API transcription",
+            "Session history (7 days)"
+        ],
+        "ai_models": ["gpt-5.2"],
+        "mock_interviews": 3,
+        "code_sessions": 5,
+        "export_enabled": False,
+        "priority_support": False
+    },
+    "beginner": {
+        "name": "Beginner",
+        "price_monthly": 25.00,
+        "price_quarterly": 67.50,  # 10% discount (25 * 3 * 0.9)
+        "price_yearly": 225.00,    # 25% discount (25 * 12 * 0.75)
+        "live_interviews": 7,
+        "session_duration_minutes": 20,
+        "features": [
+            "7 live interview sessions/month",
+            "20 minute session limit",
+            "AI assistance (GPT-5.2, Claude)",
+            "Web Speech API transcription",
+            "Session history (30 days)",
+            "Basic export (JSON)"
+        ],
+        "ai_models": ["gpt-5.2", "claude-sonnet-4.5"],
+        "mock_interviews": 10,
+        "code_sessions": 15,
+        "export_enabled": True,
+        "priority_support": False
+    },
+    "advanced": {
+        "name": "Advanced",
+        "price_monthly": 59.00,
+        "price_quarterly": 159.30,  # 10% discount (59 * 3 * 0.9)
+        "price_yearly": 531.00,     # 25% discount (59 * 12 * 0.75)
+        "live_interviews": -1,  # Unlimited
+        "session_duration_minutes": 90,
+        "features": [
+            "Unlimited live interview sessions",
+            "90 minute session limit",
+            "All AI models (GPT-5.2, Claude, Gemini)",
+            "Whisper transcription",
+            "Session history (90 days)",
+            "Full export (JSON + Markdown)",
+            "Mock interview generator",
+            "Job description analysis"
+        ],
+        "ai_models": ["gpt-5.2", "claude-sonnet-4.5", "gemini-3-flash"],
+        "mock_interviews": -1,  # Unlimited
+        "code_sessions": -1,    # Unlimited
+        "export_enabled": True,
+        "priority_support": False
+    },
+    "executive": {
+        "name": "Executive",
+        "price_monthly": 75.00,
+        "price_quarterly": 202.50,  # 10% discount (75 * 3 * 0.9)
+        "price_yearly": 675.00,     # 25% discount (75 * 12 * 0.75)
+        "live_interviews": -1,  # Unlimited
+        "session_duration_minutes": 90,
+        "features": [
+            "Unlimited live interview sessions",
+            "90 minute session limit",
+            "All AI models (GPT-5.2, Claude, Gemini)",
+            "Whisper transcription",
+            "Unlimited session history",
+            "Full export (JSON + Markdown + PDF)",
+            "Mock interview generator",
+            "Job description analysis",
+            "🌟 Personal Interview Coach AI",
+            "🌟 Resume Optimization Assistant",
+            "🌟 1-on-1 Expert Review Sessions"
+        ],
+        "ai_models": ["gpt-5.2", "claude-sonnet-4.5", "gemini-3-flash"],
+        "mock_interviews": -1,
+        "code_sessions": -1,
+        "export_enabled": True,
+        "priority_support": True,
+        "executive_benefits": {
+            "personal_coach": True,
+            "resume_optimizer": True,
+            "expert_review": True,
+            "expert_review_sessions": 2  # Per month
+        }
+    }
+}
+
 # Create the main app
 app = FastAPI()
 
