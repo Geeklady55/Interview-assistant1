@@ -63,10 +63,20 @@ Create an interview assistant for job seekers in the technical field, for phone 
 - ✅ System tray integration with quick menu
 - ✅ Global shortcuts (Ctrl+Shift+S for stealth)
 - ✅ Native stealth overlay window (always-on-top, transparent)
-- ✅ Auto-update support
+- ✅ Auto-update support with version checking
 - ✅ Single instance lock
 - ✅ Custom application menu
 - ✅ Build scripts for all platforms
+
+### CI/CD & Distribution - NEW
+- ✅ **GitHub Actions workflow for automated builds**
+- ✅ **Multi-platform builds (Windows/Mac/Linux)**
+- ✅ **Mac code signing & notarization configuration**
+- ✅ **Windows code signing support**
+- ✅ **Auto-update server with version management**
+- ✅ **Electron-updater compatible endpoints**
+- ✅ **Release management API**
+- ✅ **Comprehensive setup documentation**
 
 ### Key Features Working
 - ✅ Web Speech API for voice input
