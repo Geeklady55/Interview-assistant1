@@ -37,11 +37,12 @@ Create an interview assistant for job seekers in the technical field, for phone 
 - ✅ Q&A history management
 - ✅ Settings persistence
 - ✅ MongoDB integration
-- ✅ **NEW: OpenAI Whisper transcription endpoint**
-- ✅ **NEW: Session export (JSON & Markdown formats)**
+- ✅ OpenAI Whisper transcription endpoint
+- ✅ Session export (JSON & Markdown formats)
 
 ### Frontend (React)
 - ✅ Landing page with hero section and features
+- ✅ **NEW: Desktop download section (Windows/Mac)**
 - ✅ Dashboard with session management (including Mock Prep card)
 - ✅ Live Interview mode with real-time transcription
 - ✅ Stealth mode overlay (draggable, semi-transparent)
@@ -52,13 +53,24 @@ Create an interview assistant for job seekers in the technical field, for phone 
 - ✅ Settings page (AI model, tone, stealth opacity)
 - ✅ Dark theme with Chivo/Manrope fonts
 - ✅ Framer Motion animations
-- ✅ **NEW: Keyboard shortcuts throughout app**
-- ✅ **NEW: Whisper transcription toggle**
-- ✅ **NEW: Export dropdown (JSON/Markdown)**
+- ✅ Keyboard shortcuts throughout app
+- ✅ Whisper transcription toggle
+- ✅ Export dropdown (JSON/Markdown)
+
+### Desktop App (Electron) - NEW
+- ✅ **Native Windows app (.exe installer)**
+- ✅ **Native macOS app (.dmg, Intel & Apple Silicon)**
+- ✅ System tray integration with quick menu
+- ✅ Global shortcuts (Ctrl+Shift+S for stealth)
+- ✅ Native stealth overlay window (always-on-top, transparent)
+- ✅ Auto-update support
+- ✅ Single instance lock
+- ✅ Custom application menu
+- ✅ Build scripts for all platforms
 
 ### Key Features Working
 - ✅ Web Speech API for voice input
-- ✅ **NEW: OpenAI Whisper for enhanced transcription**
+- ✅ OpenAI Whisper for enhanced transcription
 - ✅ AI model switching (GPT-5.2, Claude, Gemini)
 - ✅ Tone customization (Professional, Casual, Technical)
 - ✅ Domain expertise selection
@@ -68,8 +80,9 @@ Create an interview assistant for job seekers in the technical field, for phone 
 - ✅ Mock interview with AI-generated questions
 - ✅ Personalized answers based on job description/resume
 - ✅ Question tips and difficulty levels
-- ✅ **NEW: Keyboard shortcuts (Ctrl+Enter, Ctrl+M, Esc, Ctrl+Shift+C)**
-- ✅ **NEW: Session export to JSON/Markdown**
+- ✅ Keyboard shortcuts (Ctrl+Enter, Ctrl+M, Esc, Ctrl+Shift+C)
+- ✅ Session export to JSON/Markdown
+- ✅ **Desktop app with native OS integration**
 
 ### Keyboard Shortcuts
 | Shortcut | Action |
