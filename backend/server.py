@@ -292,6 +292,7 @@ class GenerateAnswerRequest(BaseModel):
     resume: Optional[str] = None
     company_name: Optional[str] = None
     role_title: Optional[str] = None
+    email: Optional[str] = None  # For subscription limit checking
 
 class GenerateAnswerResponse(BaseModel):
     answer: str
