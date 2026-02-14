@@ -326,6 +326,90 @@ class SettingsModel(BaseModel):
 # HELPER FUNCTIONS
 # =============================================================================
 
+async def check_subscription_limits(email: str, usage_type: str) -> dict:
+    """
+    Check if user has reached their subscription limits.
+    Returns: { "allowed": bool, "reason": str, "limit": int, "used": int }
+    """
+    if not email:
+        # Anonymous users get free tier limits
+        return {"allowed": True, "plan": "free", "limit": 5, "used": 0}
+    
+    subscription = await db.subscriptions.find_one({"email": email}, {"_id": 0})
+    
+    if not subscription:
+        # Default to free plan
+        plan_id = "free"
+        plan = SUBSCRIPTION_PLANS["free"]
+        usage = {"live_interviews_used": 0, "mock_interviews_used": 0, "code_sessions_used": 0}
+    else:
+        plan_id = subscription.get("plan", "free")
+        plan = SUBSCRIPTION_PLANS.get(plan_id, SUBSCRIPTION_PLANS["free"])
+        usage = {
+            "live_interviews_used": subscription.get("live_interviews_used", 0),
+            "mock_interviews_used": subscription.get("mock_interviews_used", 0),
+            "code_sessions_used": subscription.get("code_sessions_used", 0)
+        }
+    
+    # Map usage type to limit field and usage field
+    limit_map = {
+        "live_interview": ("live_interviews", "live_interviews_used"),
+        "mock_interview": ("mock_interviews", "mock_interviews_used"),
+        "code_session": ("code_sessions", "code_sessions_used")
+    }
+    
+    if usage_type not in limit_map:
+        return {"allowed": True, "plan": plan_id}
+    
+    limit_field, used_field = limit_map[usage_type]
+    limit = plan.get(limit_field, 5)
+    used = usage.get(used_field, 0)
+    
+    # -1 means unlimited
+    if limit == -1:
+        return {
+            "allowed": True,
+            "plan": plan_id,
+            "limit": -1,
+            "used": used,
+            "remaining": -1,
+            "duration_limit": plan.get("session_duration_minutes", 15)
+        }
+    
+    allowed = used < limit
+    return {
+        "allowed": allowed,
+        "plan": plan_id,
+        "limit": limit,
+        "used": used,
+        "remaining": max(0, limit - used),
+        "duration_limit": plan.get("session_duration_minutes", 15),
+        "reason": f"You've used {used}/{limit} {usage_type.replace('_', ' ')}s this month" if not allowed else None
+    }
+
+async def increment_usage(email: str, usage_type: str):
+    """Increment usage counter for a user"""
+    if not email:
+        return
+    
+    field_map = {
+        "live_interview": "live_interviews_used",
+        "mock_interview": "mock_interviews_used",
+        "code_session": "code_sessions_used"
+    }
+    
+    if usage_type not in field_map:
+        return
+    
+    await db.subscriptions.update_one(
+        {"email": email},
+        {
+            "$inc": {field_map[usage_type]: 1},
+            "$setOnInsert": {"plan": "free", "status": "active"}
+        },
+        upsert=True
+    )
+
 def get_system_prompt(domain: str, tone: str, job_description: str = None, resume: str = None, company_name: str = None, role_title: str = None) -> str:
     domain_prompts = {
         "frontend": "You are an expert frontend developer with deep knowledge of React, Vue, Angular, CSS, HTML, JavaScript/TypeScript, and modern web development practices.",
