@@ -238,6 +238,132 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Desktop Download Section */}
+      <section className="py-24 px-6 bg-[#050505]">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="font-secondary font-black text-3xl sm:text-4xl tracking-tight uppercase mb-4">
+              DOWNLOAD <span className="text-secondary">DESKTOP APP</span>
+            </h2>
+            <p className="text-white/50 font-primary max-w-xl mx-auto">
+              Get the full desktop experience with system tray integration, global shortcuts, and native stealth mode
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* Windows Download */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="bento-item p-8 text-center card-interactive cursor-pointer group"
+                onClick={() => window.open('https://github.com/stealthinterview/releases/latest/download/StealthInterview-Windows.exe', '_blank')}
+              >
+                <div className="w-16 h-16 rounded-sm bg-primary/20 flex items-center justify-center mb-6 mx-auto group-hover:bg-primary/30 transition-colors">
+                  <MonitorDown className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="font-secondary font-bold text-lg tracking-tight mb-2">
+                  WINDOWS
+                </h3>
+                <p className="text-white/40 text-sm font-primary mb-4">
+                  Windows 10/11 (64-bit)
+                </p>
+                <Button
+                  data-testid="download-windows-btn"
+                  className="bg-primary hover:bg-primary/90 font-bold w-full"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download .exe
+                </Button>
+                <p className="text-xs text-white/30 mt-3 font-mono">v1.2.0 • 85 MB</p>
+              </div>
+            </motion.div>
+
+            {/* Mac Download */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="bento-item p-8 text-center card-interactive cursor-pointer group"
+                onClick={() => window.open('https://github.com/stealthinterview/releases/latest/download/StealthInterview-Mac.dmg', '_blank')}
+              >
+                <div className="w-16 h-16 rounded-sm bg-white/10 flex items-center justify-center mb-6 mx-auto group-hover:bg-white/20 transition-colors">
+                  <Apple className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="font-secondary font-bold text-lg tracking-tight mb-2">
+                  macOS
+                </h3>
+                <p className="text-white/40 text-sm font-primary mb-4">
+                  macOS 10.15+ (Intel & Apple Silicon)
+                </p>
+                <Button
+                  data-testid="download-mac-btn"
+                  variant="outline"
+                  className="border-white/20 hover:border-white/40 font-bold w-full"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download .dmg
+                </Button>
+                <p className="text-xs text-white/30 mt-3 font-mono">v1.2.0 • 92 MB</p>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Desktop Features */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="mt-12 max-w-3xl mx-auto"
+          >
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: "System Tray", desc: "Quick access" },
+                { label: "Global Shortcuts", desc: "Ctrl+Shift+S" },
+                { label: "Auto Updates", desc: "Always current" },
+                { label: "Native Stealth", desc: "True invisibility" },
+              ].map((item) => (
+                <div key={item.label} className="text-center p-4 bg-surface/50 border border-white/5 rounded-sm">
+                  <p className="font-secondary font-bold text-xs tracking-tight text-white/80">{item.label}</p>
+                  <p className="text-xs text-white/40 font-primary mt-1">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Build from Source */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="mt-8 text-center"
+          >
+            <p className="text-xs text-white/30 font-primary">
+              Prefer to build from source?{" "}
+              <a 
+                href="https://github.com/stealthinterview/desktop" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary hover:text-primary/80 underline"
+              >
+                View on GitHub
+              </a>
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-24 px-6 bg-[#050505]">
         <motion.div
