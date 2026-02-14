@@ -89,6 +89,7 @@ const LiveInterview = () => {
   const dragRef = useRef(null);
   const answerRef = useRef(null);
   const textareaRef = useRef(null);
+  const timerRef = useRef(null);
 
   // Fetch session data
   useEffect(() => {
@@ -96,13 +97,63 @@ const LiveInterview = () => {
       fetchSession();
       fetchQAHistory();
     }
+    
+    // Initialize session start time
+    setSessionStartTime(Date.now());
+    
+    return () => {
+      // Cleanup timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
   }, [sessionId]);
+  
+  // Timer effect
+  useEffect(() => {
+    if (!sessionStartTime) return;
+    
+    timerRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+      setElapsedTime(elapsed);
+      
+      const limitSeconds = durationLimit * 60;
+      const remaining = limitSeconds - elapsed;
+      
+      // Warning at 2 minutes remaining
+      if (remaining <= 120 && remaining > 0 && !timeWarning) {
+        setTimeWarning(true);
+        toast.warning("2 minutes remaining in this session!", {
+          duration: 5000,
+          icon: <AlertTriangle className="w-4 h-4" />
+        });
+      }
+      
+      // Session expired
+      if (remaining <= 0 && !sessionExpired) {
+        setSessionExpired(true);
+        toast.error("Session time limit reached. Please upgrade your plan for longer sessions.", {
+          duration: 10000
+        });
+      }
+    }, 1000);
+    
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [sessionStartTime, durationLimit, timeWarning, sessionExpired]);
 
   const fetchSession = async () => {
     try {
       const response = await axios.get(`${API}/sessions/${sessionId}`);
       setSession(response.data);
       setDomain(response.data.domain);
+      // Set duration limit from session
+      if (response.data.duration_limit) {
+        setDurationLimit(response.data.duration_limit);
+      }
     } catch (error) {
       console.error("Failed to fetch session:", error);
     }
