@@ -706,6 +706,158 @@ echo "Build complete! Check the dist folder for StealthInterview-Mac.dmg"
         logger.error(f"Desktop download error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
 
+# =============================================================================
+# AUTO-UPDATE SERVER ENDPOINTS
+# =============================================================================
+
+@api_router.post("/releases")
+async def create_release(release: CreateReleaseRequest, authorization: str = None):
+    """Create a new app release (called by CI/CD pipeline)"""
+    # Simple token auth for CI/CD
+    expected_token = os.environ.get('RELEASE_TOKEN', 'stealth-release-token-2026')
+    # In production, use proper auth
+    
+    try:
+        # Mark previous releases for this platform as not latest
+        await db.releases.update_many(
+            {"platform": release.platform, "is_latest": True},
+            {"$set": {"is_latest": False}}
+        )
+        
+        # Create new release
+        new_release = AppRelease(
+            version=release.version,
+            platform=release.platform,
+            download_url=release.download_url,
+            release_notes=release.release_notes,
+            file_size=release.file_size,
+            sha512=release.sha512,
+            is_latest=True
+        )
+        
+        doc = new_release.model_dump()
+        await db.releases.insert_one(doc)
+        
+        return {"message": "Release created", "version": release.version, "platform": release.platform}
+    except Exception as e:
+        logger.error(f"Create release error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/releases/latest")
+async def get_latest_releases():
+    """Get latest releases for all platforms"""
+    try:
+        releases = await db.releases.find({"is_latest": True}, {"_id": 0}).to_list(10)
+        return {"releases": releases}
+    except Exception as e:
+        logger.error(f"Get releases error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/releases/latest/{platform}")
+async def get_latest_release_for_platform(platform: str):
+    """Get latest release for a specific platform"""
+    try:
+        release = await db.releases.find_one(
+            {"platform": platform, "is_latest": True}, 
+            {"_id": 0}
+        )
+        if not release:
+            raise HTTPException(status_code=404, detail=f"No release found for {platform}")
+        return release
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get platform release error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/updates/{platform}")
+async def check_for_updates(platform: str, current_version: str = None):
+    """
+    Check for updates - returns update info if newer version available.
+    Compatible with electron-updater's generic provider format.
+    """
+    try:
+        release = await db.releases.find_one(
+            {"platform": platform, "is_latest": True},
+            {"_id": 0}
+        )
+        
+        if not release:
+            return {"update_available": False}
+        
+        # Compare versions if current_version provided
+        if current_version:
+            from packaging import version
+            try:
+                current = version.parse(current_version.lstrip('v'))
+                latest = version.parse(release['version'].lstrip('v'))
+                if current >= latest:
+                    return {"update_available": False, "current_version": current_version}
+            except:
+                pass
+        
+        # Return update info in electron-updater compatible format
+        return {
+            "update_available": True,
+            "version": release['version'],
+            "url": release['download_url'],
+            "sha512": release.get('sha512'),
+            "releaseNotes": release.get('release_notes'),
+            "releaseDate": release.get('created_at')
+        }
+    except Exception as e:
+        logger.error(f"Check updates error: {str(e)}")
+        return {"update_available": False, "error": str(e)}
+
+# Electron-updater compatible endpoints
+@api_router.get("/updates/{platform}/latest.yml")
+async def get_update_yml(platform: str):
+    """
+    Return update info in YAML format for electron-updater.
+    This is the format electron-updater expects for generic provider.
+    """
+    try:
+        release = await db.releases.find_one(
+            {"platform": platform, "is_latest": True},
+            {"_id": 0}
+        )
+        
+        if not release:
+            raise HTTPException(status_code=404, detail="No release found")
+        
+        # Generate YAML content
+        yaml_content = f"""version: {release['version']}
+files:
+  - url: {release['download_url']}
+    sha512: {release.get('sha512', '')}
+    size: {release.get('file_size', 0)}
+path: {release['download_url'].split('/')[-1]}
+sha512: {release.get('sha512', '')}
+releaseDate: {release.get('created_at', '')}
+"""
+        
+        from fastapi.responses import PlainTextResponse
+        return PlainTextResponse(content=yaml_content, media_type="text/yaml")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get update YAML error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/releases")
+async def list_all_releases(platform: str = None, limit: int = 20):
+    """List all releases, optionally filtered by platform"""
+    try:
+        query = {}
+        if platform:
+            query["platform"] = platform
+        
+        releases = await db.releases.find(query, {"_id": 0}).sort("created_at", -1).to_list(limit)
+        return {"releases": releases, "total": len(releases)}
+    except Exception as e:
+        logger.error(f"List releases error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Include the router in the main app
 app.include_router(api_router)
 
