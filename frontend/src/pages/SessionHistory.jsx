@@ -18,6 +18,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   History,
   ArrowLeft,
   Shield,
@@ -30,6 +36,10 @@ import {
   Headphones,
   Video,
   Code,
+  Download,
+  FileJson,
+  FileText,
+  Brain,
 } from "lucide-react";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
