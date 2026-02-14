@@ -300,12 +300,30 @@ async def end_session(session_id: str):
 @api_router.post("/generate-answer", response_model=GenerateAnswerResponse)
 async def generate_answer(request: GenerateAnswerRequest):
     try:
+        # Get session context if session_id provided
+        job_desc = request.job_description
+        resume_text = request.resume
+        company = request.company_name
+        role = request.role_title
+        
+        if request.session_id:
+            session = await db.sessions.find_one({"id": request.session_id}, {"_id": 0})
+            if session:
+                job_desc = job_desc or session.get("job_description")
+                resume_text = resume_text or session.get("resume")
+                company = company or session.get("company_name")
+                role = role or session.get("role_title")
+        
         answer = await get_ai_response(
             question=request.question,
             ai_model=request.ai_model,
             domain=request.domain,
             tone=request.tone,
-            context=request.context
+            context=request.context,
+            job_description=job_desc,
+            resume=resume_text,
+            company_name=company,
+            role_title=role
         )
         
         qa_id = None
