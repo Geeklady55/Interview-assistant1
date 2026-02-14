@@ -451,16 +451,67 @@ app.on('will-quit', () => {
 });
 
 // Auto-updater events
-autoUpdater.on('update-available', () => {
+autoUpdater.on('checking-for-update', () => {
+  console.log('Checking for updates...');
+});
+
+autoUpdater.on('update-available', (info) => {
+  console.log('Update available:', info.version);
+  updateAvailable = true;
+  
   if (mainWindow) {
-    mainWindow.webContents.send('update-available');
+    mainWindow.webContents.send('update-available', info);
+  }
+  
+  // Show notification
+  const { Notification } = require('electron');
+  if (Notification.isSupported()) {
+    const notification = new Notification({
+      title: 'Update Available',
+      body: `StealthInterview ${info.version} is available. It will be installed on restart.`,
+      icon: path.join(__dirname, 'assets', 'icon.png')
+    });
+    notification.show();
   }
 });
 
-autoUpdater.on('update-downloaded', () => {
+autoUpdater.on('update-not-available', () => {
+  console.log('No updates available');
+});
+
+autoUpdater.on('download-progress', (progress) => {
+  console.log(`Download progress: ${Math.round(progress.percent)}%`);
   if (mainWindow) {
-    mainWindow.webContents.send('update-downloaded');
+    mainWindow.webContents.send('update-progress', progress);
+    mainWindow.setProgressBar(progress.percent / 100);
   }
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  console.log('Update downloaded:', info.version);
+  
+  if (mainWindow) {
+    mainWindow.webContents.send('update-downloaded', info);
+    mainWindow.setProgressBar(-1); // Remove progress bar
+  }
+  
+  // Show dialog to restart
+  dialog.showMessageBox(mainWindow, {
+    type: 'info',
+    title: 'Update Ready',
+    message: `StealthInterview ${info.version} has been downloaded.`,
+    detail: 'The update will be installed when you restart the app. Restart now?',
+    buttons: ['Restart Now', 'Later'],
+    defaultId: 0
+  }).then((result) => {
+    if (result.response === 0) {
+      autoUpdater.quitAndInstall(false, true);
+    }
+  });
+});
+
+autoUpdater.on('error', (error) => {
+  console.error('Auto-updater error:', error);
 });
 
 // IPC handlers
@@ -473,4 +524,21 @@ ipcMain.handle('toggle-stealth', () => {
     createStealthWindow();
     return true;
   }
+});
+
+ipcMain.handle('check-for-updates', () => {
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdates();
+    return true;
+  }
+  return false;
+});
+
+ipcMain.handle('get-update-status', () => ({
+  updateAvailable,
+  currentVersion: app.getVersion()
+}));
+
+ipcMain.handle('install-update', () => {
+  autoUpdater.quitAndInstall(false, true);
 });
