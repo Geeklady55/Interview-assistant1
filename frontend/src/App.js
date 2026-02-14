@@ -8,6 +8,8 @@ import CodeInterview from "@/pages/CodeInterview";
 import MockInterview from "@/pages/MockInterview";
 import SessionHistory from "@/pages/SessionHistory";
 import Settings from "@/pages/Settings";
+import PricingPage from "@/pages/PricingPage";
+import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 
 function App() {
   return (
@@ -24,6 +26,8 @@ function App() {
           <Route path="/history" element={<SessionHistory />} />
           <Route path="/history/:sessionId" element={<SessionHistory />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/subscription/success" element={<SubscriptionSuccess />} />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" richColors />
