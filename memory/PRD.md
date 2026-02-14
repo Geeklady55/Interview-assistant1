@@ -23,12 +23,16 @@ Create an interview assistant for job seekers in the technical field, for phone 
 - Code editor with AI assistance
 - Session management and history
 - Cross-platform (Windows/Mac via browser)
+- Mock interview practice with AI-generated questions
+- Job description and resume context for personalized answers
 
-## What's Been Implemented (v1.0.0) - Feb 12, 2026
+## What's Been Implemented (v1.1.0) - Feb 14, 2026
 
 ### Backend (FastAPI)
-- ✅ Session CRUD operations
+- ✅ Session CRUD operations with job description/resume fields
 - ✅ AI answer generation with GPT-5.2, Claude Sonnet 4.5, Gemini 3 Flash
+- ✅ Context-aware answers using job description and resume
+- ✅ Mock interview questions generation endpoint
 - ✅ Code assistance endpoint
 - ✅ Q&A history management
 - ✅ Settings persistence
@@ -36,12 +40,14 @@ Create an interview assistant for job seekers in the technical field, for phone 
 
 ### Frontend (React)
 - ✅ Landing page with hero section and features
-- ✅ Dashboard with session management
+- ✅ Dashboard with session management (including Mock Prep card)
 - ✅ Live Interview mode with real-time transcription
 - ✅ Stealth mode overlay (draggable, semi-transparent)
 - ✅ Code Interview mode with split-pane editor
+- ✅ **NEW: Mock Interview mode for practice**
+- ✅ **NEW: Job description & resume input in session creation**
 - ✅ Session History page
-- ✅ Settings page (AI model, tone, domain, stealth opacity)
+- ✅ Settings page (AI model, tone, stealth opacity)
 - ✅ Dark theme with Chivo/Manrope fonts
 - ✅ Framer Motion animations
 
@@ -53,6 +59,9 @@ Create an interview assistant for job seekers in the technical field, for phone 
 - ✅ Copy-to-clipboard functionality
 - ✅ Session persistence
 - ✅ Stealth mode with adjustable opacity
+- ✅ **NEW: Mock interview with AI-generated questions**
+- ✅ **NEW: Personalized answers based on job description/resume**
+- ✅ **NEW: Question tips and difficulty levels**
 
 ## Prioritized Backlog
 
@@ -85,18 +94,20 @@ Frontend (React + Tailwind)
 ├── Dashboard
 ├── Live Interview Mode
 ├── Code Interview Mode
+├── Mock Interview Mode (NEW)
 ├── Session History
 └── Settings
 
 Backend (FastAPI)
-├── /api/sessions (CRUD)
-├── /api/generate-answer (AI)
+├── /api/sessions (CRUD with job desc/resume)
+├── /api/generate-answer (AI with context)
+├── /api/generate-mock-questions (NEW)
 ├── /api/code-assist (Code AI)
 ├── /api/qa-pairs (History)
 └── /api/settings (Config)
 
 Database (MongoDB)
-├── sessions
+├── sessions (with job_description, resume, company_name, role_title)
 ├── qa_pairs
 └── settings
 
@@ -108,5 +119,5 @@ AI Integration (Emergent LLM)
 
 ## Next Tasks
 1. Add keyboard shortcuts (Ctrl+Enter to submit, Escape to toggle stealth)
-2. Implement interview practice mode with common questions
-3. Add session export functionality
+2. Implement OpenAI Whisper for better transcription
+3. Add session export functionality (PDF/JSON)
