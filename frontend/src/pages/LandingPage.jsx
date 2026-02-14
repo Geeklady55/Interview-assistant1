@@ -263,9 +263,7 @@ const LandingPage = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
             >
-              <div className="bento-item p-8 text-center card-interactive cursor-pointer group"
-                onClick={() => window.open('https://github.com/stealthinterview/releases/latest/download/StealthInterview-Windows.exe', '_blank')}
-              >
+              <div className="bento-item p-8 text-center card-interactive group">
                 <div className="w-16 h-16 rounded-sm bg-primary/20 flex items-center justify-center mb-6 mx-auto group-hover:bg-primary/30 transition-colors">
                   <MonitorDown className="w-8 h-8 text-primary" />
                 </div>
@@ -275,14 +273,19 @@ const LandingPage = () => {
                 <p className="text-white/40 text-sm font-primary mb-4">
                   Windows 10/11 (64-bit)
                 </p>
-                <Button
-                  data-testid="download-windows-btn"
-                  className="bg-primary hover:bg-primary/90 font-bold w-full"
+                <a 
+                  href="/api/desktop/download?platform=windows"
+                  download="StealthInterview-Desktop-Windows.zip"
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download .exe
-                </Button>
-                <p className="text-xs text-white/30 mt-3 font-mono">v1.2.0 • 85 MB</p>
+                  <Button
+                    data-testid="download-windows-btn"
+                    className="bg-primary hover:bg-primary/90 font-bold w-full"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download for Windows
+                  </Button>
+                </a>
+                <p className="text-xs text-white/30 mt-3 font-mono">v1.2.0 • Source + Build Script</p>
               </div>
             </motion.div>
 
@@ -293,9 +296,7 @@ const LandingPage = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
             >
-              <div className="bento-item p-8 text-center card-interactive cursor-pointer group"
-                onClick={() => window.open('https://github.com/stealthinterview/releases/latest/download/StealthInterview-Mac.dmg', '_blank')}
-              >
+              <div className="bento-item p-8 text-center card-interactive group">
                 <div className="w-16 h-16 rounded-sm bg-white/10 flex items-center justify-center mb-6 mx-auto group-hover:bg-white/20 transition-colors">
                   <Apple className="w-8 h-8 text-white" />
                 </div>
@@ -305,18 +306,48 @@ const LandingPage = () => {
                 <p className="text-white/40 text-sm font-primary mb-4">
                   macOS 10.15+ (Intel & Apple Silicon)
                 </p>
-                <Button
-                  data-testid="download-mac-btn"
-                  variant="outline"
-                  className="border-white/20 hover:border-white/40 font-bold w-full"
+                <a 
+                  href="/api/desktop/download?platform=mac"
+                  download="StealthInterview-Desktop-Mac.zip"
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download .dmg
-                </Button>
-                <p className="text-xs text-white/30 mt-3 font-mono">v1.2.0 • 92 MB</p>
+                  <Button
+                    data-testid="download-mac-btn"
+                    variant="outline"
+                    className="border-white/20 hover:border-white/40 font-bold w-full"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download for Mac
+                  </Button>
+                </a>
+                <p className="text-xs text-white/30 mt-3 font-mono">v1.2.0 • Source + Build Script</p>
               </div>
             </motion.div>
           </div>
+
+          {/* Build Instructions */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.25 }}
+            className="mt-8 max-w-3xl mx-auto"
+          >
+            <div className="bg-surface/80 border border-white/10 rounded-sm p-6">
+              <h4 className="font-secondary font-bold text-sm tracking-tight mb-4 flex items-center gap-2">
+                <Code className="w-4 h-4 text-primary" />
+                QUICK BUILD INSTRUCTIONS
+              </h4>
+              <div className="font-mono text-xs text-white/60 space-y-2">
+                <p className="text-white/40"># 1. Extract the downloaded zip</p>
+                <p className="text-white/40"># 2. Open terminal in the extracted folder</p>
+                <p>yarn install</p>
+                <p className="text-white/40"># 3. Build for your platform:</p>
+                <p>yarn build:win  <span className="text-white/30"># Windows</span></p>
+                <p>yarn build:mac  <span className="text-white/30"># macOS</span></p>
+                <p className="text-white/40"># 4. Find installer in dist/ folder</p>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Desktop Features */}
           <motion.div
@@ -324,7 +355,7 @@ const LandingPage = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
-            className="mt-12 max-w-3xl mx-auto"
+            className="mt-8 max-w-3xl mx-auto"
           >
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
@@ -339,27 +370,6 @@ const LandingPage = () => {
                 </div>
               ))}
             </div>
-          </motion.div>
-
-          {/* Build from Source */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.4 }}
-            className="mt-8 text-center"
-          >
-            <p className="text-xs text-white/30 font-primary">
-              Prefer to build from source?{" "}
-              <a 
-                href="https://github.com/stealthinterview/desktop" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:text-primary/80 underline"
-              >
-                View on GitHub
-              </a>
-            </p>
           </motion.div>
         </div>
       </section>
