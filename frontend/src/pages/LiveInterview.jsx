@@ -690,6 +690,7 @@ const LiveInterview = () => {
       )}
     </>
   );
+  };
 
   // Stealth mode overlay
   if (stealthMode) {
