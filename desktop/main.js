@@ -5,10 +5,10 @@ const { autoUpdater } = require('electron-updater');
 // Configuration
 const CONFIG = {
   // Change this to your deployed URL or localhost for development
-  APP_URL: process.env.STEALTH_APP_URL || 'https://tech-interview-pro-1.preview.emergentagent.com',
+  APP_URL: process.env.STEALTH_APP_URL || 'https://interviewbuddy-19.preview.emergentagent.com',
   
   // Update server URL (for custom update server)
-  UPDATE_SERVER_URL: process.env.STEALTH_UPDATE_URL || 'https://tech-interview-pro-1.preview.emergentagent.com/api',
+  UPDATE_SERVER_URL: process.env.STEALTH_UPDATE_URL || 'https://interviewbuddy-19.preview.emergentagent.com/api',
   
   // Window settings
   WINDOW: {
