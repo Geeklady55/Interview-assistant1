@@ -780,6 +780,25 @@ async def check_limits(email: str = None, usage_type: str = "live_interview"):
 # Session Management
 @api_router.post("/sessions", response_model=Session)
 async def create_session(input: SessionCreate):
+    # Check subscription limits based on interview type
+    usage_type = "live_interview" if input.interview_type in ["phone", "video"] else \
+                 "mock_interview" if input.interview_type == "mock" else \
+                 "code_session" if input.interview_type == "coding" else "live_interview"
+    
+    limit_check = await check_subscription_limits(input.email, usage_type)
+    
+    if not limit_check.get("allowed", True):
+        raise HTTPException(
+            status_code=403, 
+            detail={
+                "error": "subscription_limit_reached",
+                "message": limit_check.get("reason", "You've reached your plan limit"),
+                "limit": limit_check.get("limit"),
+                "used": limit_check.get("used"),
+                "plan": limit_check.get("plan")
+            }
+        )
+    
     session = Session(
         name=input.name,
         interview_type=input.interview_type,
@@ -787,10 +806,17 @@ async def create_session(input: SessionCreate):
         job_description=input.job_description,
         resume=input.resume,
         company_name=input.company_name,
-        role_title=input.role_title
+        role_title=input.role_title,
+        email=input.email,
+        duration_limit=limit_check.get("duration_limit", 15)
     )
     doc = session.model_dump()
     await db.sessions.insert_one(doc)
+    
+    # Increment usage
+    if input.email:
+        await increment_usage(input.email, usage_type)
+    
     return session
 
 @api_router.get("/sessions", response_model=List[Session])
