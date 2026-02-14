@@ -76,6 +76,27 @@ class SessionUpdate(BaseModel):
     company_name: Optional[str] = None
     role_title: Optional[str] = None
 
+# App Release/Update Models
+class AppRelease(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    version: str
+    platform: str  # windows, mac, linux
+    download_url: str
+    release_notes: Optional[str] = None
+    file_size: Optional[int] = None
+    sha512: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    is_latest: bool = True
+
+class CreateReleaseRequest(BaseModel):
+    version: str
+    platform: str
+    download_url: str
+    release_notes: Optional[str] = None
+    file_size: Optional[int] = None
+    sha512: Optional[str] = None
+
 class MockQuestion(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
