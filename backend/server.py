@@ -162,6 +162,7 @@ class SessionCreate(BaseModel):
     resume: Optional[str] = None
     company_name: Optional[str] = None
     role_title: Optional[str] = None
+    email: Optional[str] = None  # For subscription tracking
 
 class Session(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -173,9 +174,11 @@ class Session(BaseModel):
     resume: Optional[str] = None
     company_name: Optional[str] = None
     role_title: Optional[str] = None
+    email: Optional[str] = None  # For subscription tracking
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     is_active: bool = True
+    duration_limit: int = 15  # Session duration limit in minutes
 
 class SessionUpdate(BaseModel):
     job_description: Optional[str] = None
