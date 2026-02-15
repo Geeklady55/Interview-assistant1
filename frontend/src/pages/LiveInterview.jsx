@@ -43,13 +43,68 @@ import {
   Zap,
   Clock,
   AlertTriangle,
+  Volume2,
+  Square,
 } from "lucide-react";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+// Text-to-Speech Hook
+const useTTS = () => {
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [currentSpeechId, setCurrentSpeechId] = useState(null);
+
+  const speak = useCallback((text, id = null) => {
+    window.speechSynthesis.cancel();
+    
+    if (!text) return;
+
+    const cleanText = text
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/•/g, '')
+      .replace(/\n+/g, '. ')
+      .trim();
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => 
+      v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')
+    ) || voices.find(v => v.lang.startsWith('en'));
+    
+    if (preferredVoice) utterance.voice = preferredVoice;
+
+    utterance.onstart = () => { setIsSpeaking(true); setCurrentSpeechId(id); };
+    utterance.onend = () => { setIsSpeaking(false); setCurrentSpeechId(null); };
+    utterance.onerror = () => { setIsSpeaking(false); setCurrentSpeechId(null); };
+
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
+  const stop = useCallback(() => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+    setCurrentSpeechId(null);
+  }, []);
+
+  useEffect(() => {
+    window.speechSynthesis.getVoices();
+    return () => window.speechSynthesis.cancel();
+  }, []);
+
+  return { speak, stop, isSpeaking, currentSpeechId };
+};
+
 const LiveInterview = () => {
   const navigate = useNavigate();
   const { sessionId } = useParams();
+  
+  // TTS hook
+  const { speak, stop, isSpeaking, currentSpeechId } = useTTS();
   
   // Session state
   const [session, setSession] = useState(null);
