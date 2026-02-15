@@ -1066,11 +1066,41 @@ Return ONLY a valid JSON array with the questions including suggested_answer for
         # Return default questions if parsing fails
         return {
             "questions": [
-                {"category": "behavioral", "question": "Tell me about yourself and your experience.", "difficulty": "easy", "tips": "Keep it concise, focus on relevant experience."},
-                {"category": "technical", "question": f"What are the key concepts in {request.domain}?", "difficulty": "medium", "tips": "Cover fundamentals and recent developments."},
-                {"category": "behavioral", "question": "Describe a challenging project you worked on.", "difficulty": "medium", "tips": "Use STAR method: Situation, Task, Action, Result."},
-                {"category": "technical", "question": "How do you approach debugging complex issues?", "difficulty": "medium", "tips": "Show systematic thinking and tool knowledge."},
-                {"category": "behavioral", "question": "Where do you see yourself in 5 years?", "difficulty": "easy", "tips": "Align with the company's growth and your career goals."}
+                {
+                    "category": "behavioral", 
+                    "question": "Tell me about yourself and your experience.", 
+                    "difficulty": "easy", 
+                    "tips": "Keep it concise, focus on relevant experience.",
+                    "suggested_answer": "**Key Points:**\n• Start with your current role and key responsibilities\n• Highlight 2-3 relevant achievements or skills\n• Connect your experience to this opportunity\n\n**Brief Explanation:**\nI'm a software engineer with 3 years of experience building scalable web applications. I've led projects that improved system performance by 40% and I'm excited to bring this expertise to your team."
+                },
+                {
+                    "category": "technical", 
+                    "question": f"What are the key concepts in {request.domain}?", 
+                    "difficulty": "medium", 
+                    "tips": "Cover fundamentals and recent developments.",
+                    "suggested_answer": f"**Key Points:**\n• Core fundamentals and design patterns\n• Best practices for scalability and maintainability\n• Recent trends and tools in the ecosystem\n\n**Brief Explanation:**\nThe key concepts include understanding core principles, following industry best practices, and staying current with evolving tools and frameworks in {request.domain}."
+                },
+                {
+                    "category": "behavioral", 
+                    "question": "Describe a challenging project you worked on.", 
+                    "difficulty": "medium", 
+                    "tips": "Use STAR method: Situation, Task, Action, Result.",
+                    "suggested_answer": "**Key Points:**\n• Describe the specific challenge and constraints\n• Explain your approach and key decisions\n• Quantify the positive outcome achieved\n\n**Brief Explanation:**\nI faced a tight deadline to migrate our legacy system. I proposed an incremental approach, led the team through prioritization, and we delivered on time with zero downtime."
+                },
+                {
+                    "category": "technical", 
+                    "question": "How do you approach debugging complex issues?", 
+                    "difficulty": "medium", 
+                    "tips": "Show systematic thinking and tool knowledge.",
+                    "suggested_answer": "**Key Points:**\n• Reproduce the issue and gather evidence (logs, metrics)\n• Isolate the problem systematically (binary search approach)\n• Use appropriate tools (debuggers, profilers, monitoring)\n\n**Brief Explanation:**\nI start by reproducing the issue, then use logs and monitoring to narrow down the scope. I apply systematic isolation and leverage debugging tools to identify and fix the root cause."
+                },
+                {
+                    "category": "behavioral", 
+                    "question": "Where do you see yourself in 5 years?", 
+                    "difficulty": "easy", 
+                    "tips": "Align with the company's growth and your career goals.",
+                    "suggested_answer": "**Key Points:**\n• Show ambition while being realistic\n• Align with the company's trajectory\n• Emphasize continuous learning and impact\n\n**Brief Explanation:**\nI see myself growing into a technical lead role, mentoring junior developers while continuing to solve challenging problems. I'm excited about contributing to your company's mission long-term."
+                }
             ],
             "ai_model": request.ai_model
         }
