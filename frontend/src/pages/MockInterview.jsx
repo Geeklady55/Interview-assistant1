@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
@@ -17,11 +17,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   ArrowLeft,
   Shield,
@@ -40,13 +40,96 @@ import {
   Send,
   Eye,
   EyeOff,
+  Volume2,
+  VolumeX,
+  Square,
 } from "lucide-react";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+// Text-to-Speech Hook
+const useTTS = () => {
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [currentSpeechId, setCurrentSpeechId] = useState(null);
+  const utteranceRef = useRef(null);
+
+  const speak = useCallback((text, id = null) => {
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    if (!text) return;
+
+    // Clean the text for speech (remove markdown formatting)
+    const cleanText = text
+      .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
+      .replace(/\*([^*]+)\*/g, '$1') // Remove italic
+      .replace(/•/g, '') // Remove bullet points
+      .replace(/\n+/g, '. ') // Replace newlines with pauses
+      .trim();
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    
+    // Try to get a natural voice
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => 
+      v.name.includes('Google') || 
+      v.name.includes('Natural') || 
+      v.name.includes('Premium')
+    ) || voices.find(v => v.lang.startsWith('en'));
+    
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      setCurrentSpeechId(id);
+    };
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setCurrentSpeechId(null);
+    };
+
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setCurrentSpeechId(null);
+    };
+
+    utteranceRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
+  const stop = useCallback(() => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+    setCurrentSpeechId(null);
+  }, []);
+
+  // Load voices on mount
+  useEffect(() => {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.getVoices();
+    };
+    
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  return { speak, stop, isSpeaking, currentSpeechId };
+};
+
 const MockInterview = () => {
   const navigate = useNavigate();
   const { sessionId } = useParams();
+
+  // TTS hook
+  const { speak, stop, isSpeaking, currentSpeechId } = useTTS();
 
   // Session state
   const [session, setSession] = useState(null);
@@ -63,6 +146,7 @@ const MockInterview = () => {
   const [generatingAnswer, setGeneratingAnswer] = useState(false);
   const [showTips, setShowTips] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showSuggestedAnswer, setShowSuggestedAnswer] = useState(false);
   
   // Settings
   const [aiModel, setAiModel] = useState("gpt-5.2");
@@ -109,6 +193,7 @@ const MockInterview = () => {
       setUserAnswer("");
       setAiAnswer("");
       setShowAiAnswer(false);
+      setShowSuggestedAnswer(false);
     } catch (error) {
       console.error("Failed to generate questions:", error);
       toast.error("Failed to generate questions");
@@ -145,6 +230,7 @@ const MockInterview = () => {
 
   const nextQuestion = () => {
     if (currentIndex < questions.length - 1) {
+      stop(); // Stop any ongoing speech
       if (userAnswer.trim() || aiAnswer) {
         setAnsweredCount(prev => prev + 1);
       }
@@ -153,22 +239,25 @@ const MockInterview = () => {
       setAiAnswer("");
       setShowAiAnswer(false);
       setShowTips(false);
+      setShowSuggestedAnswer(false);
     }
   };
 
   const prevQuestion = () => {
     if (currentIndex > 0) {
+      stop(); // Stop any ongoing speech
       setCurrentIndex(prev => prev - 1);
       setUserAnswer("");
       setAiAnswer("");
       setShowAiAnswer(false);
       setShowTips(false);
+      setShowSuggestedAnswer(false);
     }
   };
 
-  const copyAnswer = async () => {
+  const copyAnswer = async (text) => {
     try {
-      await navigator.clipboard.writeText(aiAnswer);
+      await navigator.clipboard.writeText(text || aiAnswer);
       setCopied(true);
       toast.success("Copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
@@ -198,6 +287,24 @@ const MockInterview = () => {
 
   const currentQuestion = questions[currentIndex];
   const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
+
+  // Speak question handler
+  const handleSpeakQuestion = () => {
+    if (isSpeaking && currentSpeechId === 'question') {
+      stop();
+    } else {
+      speak(currentQuestion?.question, 'question');
+    }
+  };
+
+  // Speak answer handler
+  const handleSpeakAnswer = (text, id) => {
+    if (isSpeaking && currentSpeechId === id) {
+      stop();
+    } else {
+      speak(text, id);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#050505] text-white">
@@ -267,7 +374,7 @@ const MockInterview = () => {
             <Card className="bg-surface border-white/10">
               <CardContent className="p-12 text-center">
                 <Loader2 className="w-10 h-10 text-primary mx-auto mb-4 animate-spin" />
-                <p className="text-white/50 font-primary">Generating interview questions...</p>
+                <p className="text-white/50 font-primary">Generating interview questions with suggested answers...</p>
               </CardContent>
             </Card>
           ) : questions.length === 0 ? (
@@ -310,16 +417,40 @@ const MockInterview = () => {
                           </Badge>
                         </div>
                       </div>
-                      <Button
-                        data-testid="show-tips-btn"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowTips(!showTips)}
-                        className="text-accent hover:text-accent/80"
-                      >
-                        <Lightbulb className="w-4 h-4 mr-1" />
-                        Tips
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                data-testid="speak-question-btn"
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleSpeakQuestion}
+                                className={`${isSpeaking && currentSpeechId === 'question' ? 'text-primary' : 'text-white/50'} hover:text-primary`}
+                              >
+                                {isSpeaking && currentSpeechId === 'question' ? (
+                                  <Square className="w-4 h-4" />
+                                ) : (
+                                  <Volume2 className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {isSpeaking && currentSpeechId === 'question' ? 'Stop' : 'Read question aloud'}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <Button
+                          data-testid="show-tips-btn"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowTips(!showTips)}
+                          className="text-accent hover:text-accent/80"
+                        >
+                          <Lightbulb className="w-4 h-4 mr-1" />
+                          Tips
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -348,6 +479,81 @@ const MockInterview = () => {
                 </Card>
               </motion.div>
 
+              {/* Pre-generated Suggested Answer */}
+              {currentQuestion?.suggested_answer && (
+                <Card className="bg-surface border-secondary/30">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="font-secondary font-bold text-sm tracking-tight uppercase flex items-center gap-2">
+                        <Lightbulb className="w-4 h-4 text-secondary" />
+                        SUGGESTED ANSWER
+                      </CardTitle>
+                      <div className="flex items-center gap-2">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                data-testid="speak-suggested-btn"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleSpeakAnswer(currentQuestion.suggested_answer, 'suggested')}
+                                className={`${isSpeaking && currentSpeechId === 'suggested' ? 'text-secondary' : 'text-white/50'} hover:text-secondary`}
+                              >
+                                {isSpeaking && currentSpeechId === 'suggested' ? (
+                                  <Square className="w-4 h-4" />
+                                ) : (
+                                  <Volume2 className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {isSpeaking && currentSpeechId === 'suggested' ? 'Stop' : 'Read answer aloud'}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyAnswer(currentQuestion.suggested_answer)}
+                          className="text-white/50 hover:text-white"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          data-testid="toggle-suggested-btn"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowSuggestedAnswer(!showSuggestedAnswer)}
+                          className="text-secondary hover:text-secondary/80"
+                        >
+                          {showSuggestedAnswer ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          <span className="ml-1 text-xs">{showSuggestedAnswer ? 'Hide' : 'Show'}</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <AnimatePresence>
+                      {showSuggestedAnswer ? (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="answer-content text-sm text-white/80 whitespace-pre-wrap p-4 bg-black/40 rounded-sm"
+                        >
+                          {currentQuestion.suggested_answer}
+                        </motion.div>
+                      ) : (
+                        <div className="p-4 text-center border border-dashed border-secondary/30 rounded-sm">
+                          <Eye className="w-6 h-6 text-secondary/40 mx-auto mb-2" />
+                          <p className="text-xs text-white/40">Click "Show" to reveal the suggested answer</p>
+                        </div>
+                      )}
+                    </AnimatePresence>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Your Answer */}
               <Card className="bg-surface border-white/10">
                 <CardHeader className="pb-3">
@@ -367,17 +573,39 @@ const MockInterview = () => {
                 </CardContent>
               </Card>
 
-              {/* AI Answer */}
+              {/* Custom AI Answer */}
               <Card className="bg-surface border-white/10">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="font-secondary font-bold text-sm tracking-tight uppercase flex items-center gap-2">
-                      <Brain className="w-4 h-4 text-secondary" />
-                      AI SUGGESTED ANSWER
+                      <Brain className="w-4 h-4 text-primary" />
+                      CUSTOM AI ANSWER
                     </CardTitle>
                     <div className="flex items-center gap-2">
                       {aiAnswer && (
                         <>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  data-testid="speak-ai-answer-btn"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleSpeakAnswer(aiAnswer, 'ai')}
+                                  className={`${isSpeaking && currentSpeechId === 'ai' ? 'text-primary' : 'text-white/50'} hover:text-primary`}
+                                >
+                                  {isSpeaking && currentSpeechId === 'ai' ? (
+                                    <Square className="w-4 h-4" />
+                                  ) : (
+                                    <Volume2 className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {isSpeaking && currentSpeechId === 'ai' ? 'Stop' : 'Read answer aloud'}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                           <Button
                             data-testid="toggle-answer-btn"
                             variant="ghost"
@@ -391,7 +619,7 @@ const MockInterview = () => {
                             data-testid="copy-ai-answer-btn"
                             variant="ghost"
                             size="sm"
-                            onClick={copyAnswer}
+                            onClick={() => copyAnswer(aiAnswer)}
                             className="text-white/50 hover:text-white"
                           >
                             {copied ? <Check className="w-4 h-4 text-secondary" /> : <Copy className="w-4 h-4" />}
@@ -403,14 +631,14 @@ const MockInterview = () => {
                         size="sm"
                         onClick={generateAiAnswer}
                         disabled={generatingAnswer}
-                        className="bg-secondary hover:bg-secondary/90 font-bold"
+                        className="bg-primary hover:bg-primary/90 font-bold"
                       >
                         {generatingAnswer ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                           <>
                             <Send className="w-4 h-4 mr-2" />
-                            Generate
+                            Regenerate
                           </>
                         )}
                       </Button>
@@ -450,7 +678,7 @@ const MockInterview = () => {
                     <div className="p-6 text-center border border-dashed border-white/10 rounded-sm">
                       <Brain className="w-8 h-8 text-white/20 mx-auto mb-2" />
                       <p className="text-sm text-white/40">
-                        Click "Generate" to get an AI-suggested answer tailored to your resume and the job.
+                        Click "Regenerate" to get a fresh AI answer tailored to your resume and the job.
                       </p>
                     </div>
                   )}
