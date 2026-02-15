@@ -692,16 +692,46 @@ const LiveInterview = () => {
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wide text-white/50">ANSWER</span>
             {currentAnswer && (
-              <Button
-                data-testid="copy-answer-btn"
-                variant="ghost"
-                size="sm"
-                onClick={copyAnswer}
-                className="h-6 px-2 text-xs"
-              >
-                {copied ? <Check className="w-3 h-3 mr-1 text-secondary" /> : <Copy className="w-3 h-3 mr-1" />}
-                {copied ? 'Copied' : 'Copy (Ctrl+Shift+C)'}
-              </Button>
+              <div className="flex items-center gap-1">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        data-testid="speak-answer-btn"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          if (isSpeaking && currentSpeechId === 'answer') {
+                            stop();
+                          } else {
+                            speak(currentAnswer, 'answer');
+                          }
+                        }}
+                        className={`h-6 px-2 ${isSpeaking && currentSpeechId === 'answer' ? 'text-primary' : 'text-white/50'}`}
+                      >
+                        {isSpeaking && currentSpeechId === 'answer' ? (
+                          <Square className="w-3 h-3" />
+                        ) : (
+                          <Volume2 className="w-3 h-3" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {isSpeaking && currentSpeechId === 'answer' ? 'Stop' : 'Read aloud'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <Button
+                  data-testid="copy-answer-btn"
+                  variant="ghost"
+                  size="sm"
+                  onClick={copyAnswer}
+                  className="h-6 px-2 text-xs"
+                >
+                  {copied ? <Check className="w-3 h-3 mr-1 text-secondary" /> : <Copy className="w-3 h-3 mr-1" />}
+                  {copied ? 'Copied' : 'Copy'}
+                </Button>
+              </div>
             )}
           </div>
           <Card className="bg-black/40 border-white/10">
