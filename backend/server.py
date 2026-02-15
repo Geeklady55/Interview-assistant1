@@ -687,6 +687,12 @@ async def get_checkout_status(session_id: str, http_request: Request):
         logger.error(f"Status check error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/subscriptions/check-limits")
+async def check_limits(email: str = None, usage_type: str = "live_interview"):
+    """Check if user can use a specific feature based on their subscription"""
+    result = await check_subscription_limits(email, usage_type)
+    return result
+
 @api_router.get("/subscriptions/{email}")
 async def get_user_subscription(email: str):
     """Get user's current subscription"""
