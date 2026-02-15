@@ -15,112 +15,98 @@ Create an interview assistant for job seekers in the technical field, for phone 
 ## User Choices
 - AI Models: GPT-5.2, Claude Sonnet 4.5, Gemini 3 Flash (all available)
 - Speech-to-Text: Web Speech API (browser-based) + OpenAI Whisper
+- **Text-to-Speech:** Browser's built-in Web Speech API (no external API needed)
+- **Answer Format:** Key Points + Brief Explanation (shorter, interview-ready)
 - Features: Real-time transcription, code editor, answer history, customizable tone
 - Domains: Frontend, Backend, System Design, DSA, Technical Support
 - UI: Professional, dark theme, stealth-focused
 
-## What's Been Implemented (v1.3.0) - Feb 14, 2026
+## What's Been Implemented (v1.4.0) - Feb 15, 2026
 
 ### Backend (FastAPI)
 - ✅ Session CRUD operations with subscription tracking
 - ✅ AI answer generation with GPT-5.2, Claude Sonnet 4.5, Gemini 3 Flash
 - ✅ Context-aware answers using job description and resume
-- ✅ Mock interview questions generation endpoint
+- ✅ **NEW: Shorter answers with Key Points + Brief Explanation format**
+- ✅ **NEW: Mock interview questions with pre-generated suggested answers**
 - ✅ Code assistance endpoint
 - ✅ Q&A history management
 - ✅ Settings persistence
 - ✅ MongoDB integration
 - ✅ OpenAI Whisper transcription endpoint
 - ✅ Session export (JSON & Markdown formats)
-- ✅ **NEW: Subscription plans with tiered pricing**
-- ✅ **NEW: Stripe checkout integration**
-- ✅ **NEW: Feature gating based on subscription limits**
-- ✅ **NEW: Usage tracking per user**
+- ✅ Subscription plans with tiered pricing
+- ✅ Stripe checkout integration
+- ✅ Feature gating based on subscription limits
+- ✅ Usage tracking per user
 
 ### Frontend (React)
 - ✅ Landing page with hero section and features
 - ✅ Desktop download section (Windows/Mac)
 - ✅ Dashboard with session management
 - ✅ Live Interview mode with real-time transcription
-- ✅ **NEW: Session timer with duration limits**
-- ✅ **NEW: Time warning notifications (2 min remaining)**
-- ✅ **NEW: Session expiry handling with upgrade prompts**
+- ✅ **NEW: Text-to-Speech (TTS) for answers using Web Speech API**
+- ✅ **NEW: Speaker icon to read answers aloud**
+- ✅ Session timer with duration limits
+- ✅ Time warning notifications (2 min remaining)
+- ✅ Session expiry handling with upgrade prompts
 - ✅ Stealth mode overlay (draggable, semi-transparent)
 - ✅ Code Interview mode with split-pane editor
-- ✅ Mock Interview mode for practice
-- ✅ **NEW: Pricing page with 4 subscription tiers**
-- ✅ **NEW: Billing cycle toggle (Monthly/Quarterly/Yearly)**
-- ✅ **NEW: Executive exclusive benefits section**
-- ✅ **NEW: Stripe checkout flow**
+- ✅ **NEW: Mock Interview with pre-generated suggested answers**
+- ✅ **NEW: TTS for questions in Mock Interview**
+- ✅ **NEW: TTS for suggested answers in Mock Interview**
+- ✅ **NEW: Show/Hide toggle for suggested answers**
+- ✅ Pricing page with 4 subscription tiers
+- ✅ Billing cycle toggle (Monthly/Quarterly/Yearly)
+- ✅ Executive exclusive benefits section
+- ✅ Stripe checkout flow
 - ✅ Session History page with export functionality
 - ✅ Settings page (AI model, tone, stealth opacity)
 - ✅ Dark theme with Chivo/Manrope fonts
 - ✅ Framer Motion animations
 - ✅ Keyboard shortcuts throughout app
 
-### Subscription System (NEW)
-- ✅ **4 Tiers:** Free, Beginner ($25), Advanced ($59), Executive ($75)
-- ✅ **Discounts:** 10% quarterly, 25% yearly (pre-calculated)
-- ✅ **Feature Limits:** Interview count and duration enforced
-- ✅ **Usage Tracking:** Tracks live interviews, mock interviews, code sessions
-- ✅ **Stripe Integration:** Test mode checkout with real sessions
-- ✅ **Payment Methods:** Card (Visa, Mastercard), Affirm, Venmo shown
+### Answer Format (NEW)
+All AI-generated answers now use this structure:
+```
+**Key Points:**
+• [First key point - concise, actionable]
+• [Second key point - with specific example]
+• [Third key point - practical insight]
 
-### Desktop App (Electron)
-- ✅ Native Windows app (.exe installer)
-- ✅ Native macOS app (.dmg, Intel & Apple Silicon)
-- ✅ System tray integration with quick menu
-- ✅ Global shortcuts (Ctrl+Shift+S for stealth)
-- ✅ Native stealth overlay window (always-on-top, transparent)
-- ✅ Auto-update support with version checking
+**Brief Explanation:**
+[1-2 sentences expanding on key points in conversational style]
+```
 
-### CI/CD & Distribution
-- ✅ GitHub Actions workflow for automated builds
-- ✅ Multi-platform builds (Windows/Mac/Linux)
-- ✅ Mac code signing & notarization configuration
-- ✅ Auto-update server with version management
-- ✅ Release management API
+### Text-to-Speech Features (NEW)
+- **Mock Interview:**
+  - Speaker icon to read questions aloud
+  - Speaker icon to read suggested answers aloud
+  - Stop button to pause speech
+- **Live Interview:**
+  - Speaker icon next to Copy to read AI answers aloud
+  - Uses browser's native Web Speech API (no API key needed)
 
 ## API Endpoints
+
+### Core Endpoints
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/generate-answer` | POST | Generate AI answer with Key Points format |
+| `/api/generate-mock-questions` | POST | Generate questions with suggested answers |
+| `/api/sessions` | POST | Create new interview session |
+| `/api/transcribe` | POST | Transcribe audio with Whisper |
 
 ### Subscription Endpoints
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/plans` | GET | Get all subscription plans |
-| `/api/plans/{plan_id}` | GET | Get specific plan details |
 | `/api/subscriptions/checkout` | POST | Create Stripe checkout session |
-| `/api/subscriptions/status/{session_id}` | GET | Check payment status |
 | `/api/subscriptions/check-limits` | GET | Check user's usage limits |
-| `/api/subscriptions/{email}` | GET | Get user subscription details |
-| `/api/webhook/stripe` | POST | Handle Stripe webhooks |
-
-### Core Endpoints
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/sessions` | POST | Create new interview session |
-| `/api/generate-answer` | POST | Generate AI answer |
-| `/api/transcribe` | POST | Transcribe audio with Whisper |
-| `/api/code-assist` | POST | Get code assistance |
 
 ## Database Schema
 
-### subscriptions Collection
-```json
-{
-  "id": "uuid",
-  "email": "user@example.com",
-  "plan": "free|beginner|advanced|executive",
-  "billing_cycle": "monthly|quarterly|yearly",
-  "status": "active|cancelled|expired",
-  "live_interviews_used": 0,
-  "mock_interviews_used": 0,
-  "code_sessions_used": 0,
-  "current_period_start": "ISO datetime",
-  "current_period_end": "ISO datetime"
-}
-```
-
-### sessions Collection (Updated)
+### sessions Collection
 ```json
 {
   "id": "uuid",
@@ -139,6 +125,9 @@ Create an interview assistant for job seekers in the technical field, for phone 
 - ✅ Subscription system with Stripe
 - ✅ Feature gating based on plan limits
 - ✅ Session timer with duration enforcement
+- ✅ Shorter answers with key points
+- ✅ Text-to-Speech for questions and answers
+- ✅ Pre-generated suggested answers in Mock Prep
 
 ### P1 (High Priority) - Remaining
 - ⬜ Code signing for macOS desktop builds
@@ -146,55 +135,35 @@ Create an interview assistant for job seekers in the technical field, for phone 
 - ⬜ Production Stripe keys integration
 
 ### P2 (Medium Priority)
-- ⬜ Audio output (text-to-speech for answers)
 - ⬜ Export session history to PDF
 - ⬜ Email notifications for subscription events
 - ⬜ Usage analytics dashboard
 
-### P3 (Nice to Have)
-- ⬜ Team/shared sessions
-- ⬜ Browser extension for easier access
-- ⬜ Interview recording (with consent)
-- ⬜ Integration with job boards
-
-## Known Issues
-
-### Pending Issues
-1. **Desktop Download (P1):** Currently serves zip of source code instead of pre-built installers. CI/CD pipeline exists but needs GitHub repository setup.
-2. **Whisper Testing (P2):** Speech-to-text endpoint not fully tested with real audio data.
-
-### Resolved Issues
-- ✅ Subscription feature gating now enforces limits
-- ✅ Interview timer shows remaining time and warns users
+## Testing Status
+- Backend API: ✅ All endpoints tested (9/9 passed)
+- Frontend UI: ✅ All features verified
+- TTS: ✅ Speaker icons present and functional
+- Mock Answers: ✅ Pre-generated with Key Points format
+- Session Timer: ✅ Displays correctly
 
 ## Architecture
 ```
 Frontend (React + Tailwind + shadcn/ui)
-├── Landing Page (with Desktop Downloads)
+├── Landing Page
 ├── Dashboard
-├── Live Interview Mode (with Timer)
-├── Code Interview Mode
-├── Mock Interview Mode
-├── Pricing Page (NEW)
-├── Session History (with Export)
+├── Live Interview (with TTS + Timer)
+├── Mock Interview (with Suggested Answers + TTS)
+├── Code Interview
+├── Pricing Page
+├── Session History
 └── Settings
 
 Backend (FastAPI)
-├── /api/plans (Subscription tiers)
-├── /api/subscriptions/* (Payment & limits)
-├── /api/sessions (with feature gating)
-├── /api/generate-answer (AI)
-├── /api/transcribe (Whisper STT)
-├── /api/code-assist
-└── /api/desktop/* (Updates)
-
-Database (MongoDB)
-├── sessions
-├── subscriptions (NEW)
-├── payment_transactions (NEW)
-├── qa_pairs
-├── settings
-└── releases
+├── /api/generate-answer (Key Points format)
+├── /api/generate-mock-questions (with suggested_answer)
+├── /api/sessions (with duration_limit)
+├── /api/subscriptions/*
+└── /api/transcribe (Whisper STT)
 
 AI Integration (Emergent LLM)
 ├── OpenAI GPT-5.2
@@ -202,13 +171,6 @@ AI Integration (Emergent LLM)
 ├── Google Gemini 3 Flash
 └── OpenAI Whisper (STT)
 
-Payments (Stripe - TEST MODE)
-└── Checkout Sessions
+TTS (Browser Native)
+└── Web Speech API (speechSynthesis)
 ```
-
-## Testing Status
-- Backend API: ✅ All endpoints tested via curl
-- Feature Gating: ✅ Verified blocks users at limit
-- Pricing Discounts: ✅ 10% quarterly, 25% yearly verified
-- Session Timer: ✅ Displays correctly with warnings
-- Stripe Checkout: ✅ Creates valid checkout URLs (test mode)
