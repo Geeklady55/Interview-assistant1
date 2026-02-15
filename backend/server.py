@@ -1006,13 +1006,15 @@ async def update_settings(settings: SettingsModel):
 @api_router.post("/generate-mock-questions")
 async def generate_mock_questions(request: GenerateMockQuestionsRequest):
     try:
-        system_prompt = """You are an expert technical interviewer. Generate realistic interview questions based on the provided context.
+        system_prompt = """You are an expert technical interviewer. Generate realistic interview questions with suggested answers based on the provided context.
         
 Return questions in JSON format as an array of objects with these fields:
 - category: one of "behavioral", "technical", "coding", "system_design"
 - question: the interview question
 - difficulty: one of "easy", "medium", "hard"
 - tips: brief tips for answering this question
+- suggested_answer: A concise answer with key points in this format:
+  "**Key Points:**\\n• [Point 1]\\n• [Point 2]\\n• [Point 3]\\n\\n**Brief Explanation:**\\n[1-2 sentences]"
 
 Generate diverse questions covering different aspects of the role."""
 
@@ -1026,7 +1028,7 @@ Generate diverse questions covering different aspects of the role."""
 
 {chr(10).join(context_parts)}
 
-Return ONLY a valid JSON array with the questions. No other text."""
+Return ONLY a valid JSON array with the questions including suggested_answer for each. No other text."""
 
         session_id = str(uuid.uuid4())
         chat = LlmChat(
